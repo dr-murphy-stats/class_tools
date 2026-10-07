@@ -1,0 +1,528 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Dr. Murphy's Free Throws</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700;800&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column of three "possessions" — the claim, a single 100-shot set, then many sets on a dot plot. Court-line rules divide them. */
+:root {
+  --bg: #F4F4F2;          /* chalk */
+  --panel: #FFFFFF;
+  --ink: #111111;         /* UWM black */
+  --muted: #5E5E5E;
+  --line: #D3D3D3;
+  --accent: #FFBD00;      /* UWM gold (PMS 116) */
+  --accent-text: #7A5A00; /* gold dark enough to read on white */
+  --accent-edge: #B38600;
+  --accent-soft: #FFF2CC;
+  --miss: #9A9A9A;
+  --band: #000000; --band-ink: #FFFFFF; --band-tile: #1C1C1C; --band-line: #3A3A3A; --band-muted: #BDBDBD;
+  --court: #E8D9BE;       /* maple, only in the gym strip */
+  --court-line: #B98E58;
+  --focus: #2F6FD6;
+  --display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E0E0E; --panel: #191919; --ink: #F2F2F2; --muted: #ABABAB; --line: #343434;
+    --accent: #FFBD00; --accent-text: #FFC933; --accent-edge: #FFBD00; --accent-soft: #3A2D05; --miss: #6F6F6F; --court: #2A2219; --court-line: #7A5C38; --focus: #7FA8F0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E0E0E; --panel: #191919; --ink: #F2F2F2; --muted: #ABABAB; --line: #343434;
+  --accent: #FFBD00; --accent-text: #FFC933; --accent-edge: #FFBD00; --accent-soft: #3A2D05; --miss: #6F6F6F; --court: #2A2219; --court-line: #7A5C38; --focus: #7FA8F0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--display); letter-spacing: 0.01em; line-height: 1.05; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 5.5vw, 3.2rem); font-weight: 800; text-transform: uppercase; }
+h2 { font-size: 1.55rem; font-weight: 700; text-transform: uppercase; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+h2 .q { font-size: 0.95rem; color: var(--accent-text); letter-spacing: 0.08em; }
+p { margin: 0; max-width: 68ch; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* claim */
+.claim { display: grid; gap: 14px; background: var(--band); color: var(--band-ink); padding: 22px 20px; border-radius: 8px; border-bottom: 5px solid var(--accent); }
+.claim .fact { background: var(--band-tile); border-color: var(--band-line); }
+.claim .fact span, .claim details.setup summary, .claim label.field { color: var(--band-muted); }
+.claim .fact b { color: var(--accent); }
+.claim button { color: var(--band-ink); border-color: var(--band-ink); }
+.eyebrow { font-family: var(--display); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-size: 0.95rem; }
+.facts { display: flex; flex-wrap: wrap; gap: 10px; }
+.fact { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; display: grid; }
+.fact b { font-family: var(--display); font-size: 1.6rem; line-height: 1; font-weight: 800; }
+.fact span { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+details.setup { font-size: 0.9rem; }
+details.setup summary { cursor: pointer; color: var(--muted); }
+.setup-grid { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; align-items: end; }
+label.field { display: grid; gap: 4px; font-size: 0.82rem; color: var(--muted); }
+input[type="number"], select { font: inherit; font-size: 16px; min-height: 40px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 5px; padding: 6px 8px; width: 7.5em; }
+select { width: auto; }
+
+section.block { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 16px; min-width: 0; }
+
+/* gym strip */
+.gym { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 720px) { .gym { grid-template-columns: 1fr; } }
+.court { width: 100%; aspect-ratio: 16 / 8; max-width: 100%; border-radius: 6px; background: var(--court); display: block; }
+.board { display: grid; gap: 12px; }
+.score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.score div { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.score b { display: block; font-family: var(--display); font-size: 2rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.score span { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.shotgrid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; }
+.shotgrid i { aspect-ratio: 1; border-radius: 50%; border: 1.5px solid var(--line); display: block; }
+.shotgrid i.made { background: var(--accent); border-color: var(--accent-edge); }
+.shotgrid i.miss { border-color: var(--miss); background: repeating-linear-gradient(45deg, transparent 0 2px, var(--miss) 2px 3px); opacity: 0.7; }
+.callout { font-size: 0.9rem; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; }
+
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: inherit; font-weight: 600; font-size: 0.95rem; border-radius: 6px; padding: 10px 16px; min-height: 44px; touch-action: manipulation; cursor: pointer; border: 1px solid var(--ink); background: transparent; color: var(--ink); }
+button.primary { background: var(--accent); border-color: var(--accent-edge); color: #000; }
+button:hover { filter: brightness(1.06); }
+button:disabled { opacity: 0.45; cursor: default; }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* dot plot */
+.plotwrap { position: relative; width: 100%; }
+canvas#plot { width: 100%; height: 300px; display: block; touch-action: pan-y; }
+@media (max-width: 520px) { canvas#plot { height: 260px; } .score b { font-size: 1.7rem; } section.block { padding: 14px; } .btns button { flex: 1 1 auto; } .shotgrid { gap: 2px; } }
+.stats { display: flex; flex-wrap: wrap; gap: 18px; font-size: 0.92rem; }
+.stats b { font-variant-numeric: tabular-nums; }
+.countbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.result { font-size: 1.02rem; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; font-variant-numeric: tabular-nums; }
+.result strong { color: var(--accent-text); }
+.check { display: flex; gap: 6px; align-items: center; font-size: 0.9rem; }
+.calc { display: grid; gap: 12px; }
+.calc-row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 4px 14px; align-items: center; padding-block: 10px; border-top: 1px solid var(--line); }
+.calc-row:first-child { border-top: 0; }
+.decision { display: grid; gap: 10px; line-height: 1.55; min-width: 0; }
+.decision p { max-width: none; }
+.decision b.lbl { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.calc-row h3 { margin: 0; font-family: var(--display); font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.math { font-size: 1.08rem; font-variant-numeric: tabular-nums; overflow-x: auto; min-width: 0; line-height: 1.8; }
+.math .ans { background: var(--accent-soft); border-bottom: 2px solid var(--accent); padding: 1px 6px; border-radius: 3px; font-weight: 700; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.25; margin: 0 2px; }
+.frac > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 4px; }
+.frac > span:last-child { padding: 0 4px; }
+.sqrt { display: inline-flex; align-items: stretch; vertical-align: middle; }
+.sqrt::before { content: "√"; font-size: 1.5em; line-height: 1.1; }
+.sqrt > span { border-top: 1.5px solid currentColor; padding: 2px 3px 0; display: inline-flex; align-items: center; }
+canvas#zplot { width: 100%; max-width: 520px; height: 170px; display: block; }
+@media (max-width: 520px) { .calc-row { grid-template-columns: 1fr; } }
+footer { font-size: 0.82rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="claim">
+    <div class="eyebrow">MthStat 215 · Lesson 10 · Hypothesis tests</div>
+    <h1 id="title">Is Dr. Murphy really an 80% free throw shooter?</h1>
+    <p id="story">Dr. Murphy claims to be an 80% free throw shooter. To prove it, she shoots 100 free throws and makes 70 of them. Is she exaggerating, or could an 80% shooter have a day like this just by chance? Assume the claim is true, simulate an 80% shooter, and see how often a result this low happens.</p>
+    <div class="facts">
+      <div class="fact"><b class="num" id="fClaim">0.80</b><span>Claimed p</span></div>
+      <div class="fact"><b class="num" id="fN">100</b><span>Shots per set (n)</span></div>
+      <div class="fact"><b class="num" id="fObs">70 / 100</b><span>Dr. Murphy made</span></div>
+      <div class="fact"><b class="num" id="fPhat">0.70</b><span>Her p-hat</span></div>
+    </div>
+    <details class="setup">
+      <summary>Change the setup</summary>
+      <div class="setup-grid">
+        <label class="field" for="inP">Claimed free throw % (p)<input id="inP" type="number" min="0.05" max="0.99" step="0.01" value="0.80"></label>
+        <label class="field" for="inN">Shots per set (n)<input id="inN" type="number" min="5" max="400" step="1" value="100"></label>
+        <label class="field" for="inX">Shots Dr. Murphy made<input id="inX" type="number" min="0" max="400" step="1" value="70"></label>
+        <button id="applySetup" type="button">Apply and reset</button>
+      </div>
+    </details>
+  </header>
+
+  <section class="block" aria-labelledby="h-one">
+    <h2 id="h-one"><span class="q">Step 1</span> Shoot one set as an 80% shooter</h2>
+    <p class="muted" id="oneIntro">Each shot goes in with probability 0.80. Shoot a full set of 100 and record how many went in.</p>
+    <div class="gym">
+      <svg class="court" id="court" viewBox="0 0 320 160" role="img" aria-label="Free throw animation">
+        <line x1="0" y1="146" x2="320" y2="146" stroke="var(--court-line)" stroke-width="2"></line>
+        <line x1="70" y1="146" x2="70" y2="140" stroke="var(--court-line)" stroke-width="2"></line>
+        <!-- shooter -->
+        <g stroke="var(--ink)" stroke-width="3" stroke-linecap="round" fill="none">
+          <circle cx="62" cy="86" r="7" fill="var(--ink)" stroke="none"></circle>
+          <line x1="62" y1="94" x2="62" y2="120"></line>
+          <line x1="62" y1="120" x2="55" y2="145"></line>
+          <line x1="62" y1="120" x2="69" y2="145"></line>
+          <line x1="62" y1="99" x2="74" y2="82"></line>
+          <line x1="62" y1="99" x2="72" y2="88"></line>
+        </g>
+        <text x="62" y="74" text-anchor="middle" font-size="9" font-family="Public Sans, sans-serif" fill="var(--ink)" font-weight="700">Dr. Murphy</text>
+        <!-- hoop -->
+        <line x1="292" y1="146" x2="292" y2="70" stroke="var(--ink)" stroke-width="4"></line>
+        <rect x="282" y="30" width="5" height="44" fill="var(--ink)"></rect>
+        <line x1="250" y1="62" x2="282" y2="62" stroke="var(--accent)" stroke-width="3"></line>
+        <path d="M252 62 L258 80 L274 80 L280 62" fill="none" stroke="var(--muted)" stroke-width="1.2"></path>
+        <path d="M256 62 L264 80 M266 62 L262 80 M276 62 L270 80" fill="none" stroke="var(--muted)" stroke-width="1"></path>
+        <circle id="ball" cx="76" cy="80" r="6" fill="var(--accent)" stroke="var(--ink)" stroke-width="0.8"></circle>
+        <text id="verdict" x="266" y="22" text-anchor="middle" font-size="14" font-family="Saira Condensed, sans-serif" font-weight="800" fill="var(--accent-text)"></text>
+      </svg>
+      <div class="board">
+        <div class="score">
+          <div><b id="sShots">0</b><span>Shots</span></div>
+          <div><b id="sMade">0</b><span>Made</span></div>
+          <div><b id="sPhat">—</b><span>p-hat so far</span></div>
+        </div>
+        <div class="shotgrid" id="shotgrid" aria-label="Shot chart"></div>
+        <div class="btns">
+          <button class="primary" id="shoot1" type="button">Shoot 1</button>
+          <button id="shoot10" type="button">Shoot 10</button>
+          <button id="finish" type="button">Finish the set</button>
+          <button id="newSet" type="button">New set</button>
+        </div>
+      </div>
+    </div>
+    <div class="callout" id="setMsg">A finished set is added as one dot on the plot below.</div>
+  </section>
+
+  <section class="block" aria-labelledby="h-many">
+    <h2 id="h-many"><span class="q">Step 2</span> Repeat the set many times</h2>
+    <p class="muted" id="manyIntro">Each dot is one simulated set of 100 free throws by an 80% shooter, placed at that set's proportion made, p-hat. The dashed line marks Dr. Murphy's p-hat = 0.70.</p>
+    <div class="btns">
+      <span class="muted" style="align-self:center">Simulate</span>
+      <button class="primary" data-sets="1" type="button">1 set</button>
+      <button class="primary" data-sets="10" type="button">10 sets</button>
+      <button class="primary" data-sets="100" type="button">100 sets</button>
+      <button class="primary" data-sets="1000" type="button">1000 sets</button>
+      <button id="clearPlot" type="button">Clear dots</button>
+    </div>
+    <div class="plotwrap"><canvas id="plot" aria-label="Dot plot of simulated sample proportions"></canvas></div>
+    <div class="stats">
+      <span>Sets simulated: <b id="tN">0</b></span>
+      <span>Mean of p-hat: <b id="tMean">—</b></span>
+      <span>SD of p-hat: <b id="tSD">—</b></span>
+      <label class="check" for="showNormal"><input type="checkbox" id="showNormal"> Show Normal model N(<span id="nmLabel">0.80, 0.040</span>)</label>
+    </div>
+    <div class="countbar">
+      <label class="field" for="cmp">Count sets with p-hat
+        <select id="cmp">
+          <option value="le">≤ (at or below)</option>
+          <option value="ge">≥ (at or above)</option>
+          <option value="two">at least as far from p as</option>
+        </select>
+      </label>
+      <label class="field" for="cut">Value<input id="cut" type="number" min="0" max="1" step="0.01" value="0.70"></label>
+    </div>
+    <div class="result" id="result">Simulate some sets to count them.</div>
+  </section>
+
+  <section class="block" aria-labelledby="h-normal">
+    <h2 id="h-normal"><span class="q">Step 3</span> A hypothesis test for one proportion</h2>
+    <p class="muted" id="normIntro">We don't need thousands of simulated sets to determine if this result is unusual enough to cast doubt on the claim. If the claim is true, and the appropriate conditions are met, the sampling distribution of p-hat is approximately Normal, with a mean and standard deviation determined by the claim (p) and the sample size (n). So, we can use the model to find the z-score of our observed proportion and use the Normal model to find the probability of a result like this one (or more extreme) occurring. This is called a <strong>hypothesis test</strong>.</p>
+    <div class="calc">
+      <div class="calc-row"><h3>Hypotheses</h3><div class="math" id="cHyp"></div></div>
+      <div class="calc-row"><h3>Conditions</h3><div class="math" id="cCond"></div></div>
+      <div class="calc-row"><h3>Model</h3><div class="math" id="cModel"></div></div>
+      <div class="calc-row"><h3>Standard deviation</h3><div class="math" id="cSE"></div></div>
+      <div class="calc-row"><h3>z-score</h3><div class="math" id="cZ"></div></div>
+      <div class="calc-row"><h3>Probability</h3><div class="math" id="cP"></div></div>
+    </div>
+    <canvas id="zplot" aria-label="Normal model with the p-value shaded"></canvas>
+    <div class="calc"><div class="calc-row" style="border-top:1px solid var(--line)"><h3>Test decision</h3><div class="decision" id="cDec"></div></div></div>
+    <div class="callout" id="cCompare"></div>
+  </section>
+
+  <footer>Simulated with your browser's random number generator; every run is different. Each shot is an independent trial with the same probability of success, so the number made in a set follows a Binomial(n, p) model.</footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let P = 0.80, N = 100, X = 70;
+  let set = [];          // current set: array of booleans
+  let sims = [];         // completed p-hat values
+  let animating = false;
+
+  const fmt = (v, d = 2) => Number.isFinite(v) ? v.toFixed(d) : "—";
+  const sd0 = () => Math.sqrt(P * (1 - P) / N);
+  const obs = () => X / N;
+
+  function updateText() {
+    const pct = Math.round(P * 100);
+    $("title").textContent = `Is Dr. Murphy really an ${pct}% free throw shooter?`;
+    $("story").textContent = `Dr. Murphy claims to be an ${pct}% free throw shooter. To prove it, she shoots ${N} free throws and makes ${X} of them. Is she exaggerating, or could an ${pct}% shooter have a day like this just by chance? Assume the claim is true, simulate an ${pct}% shooter, and see how often a result this ${obs() < P ? "low" : "high"} happens.`;
+    $("fClaim").textContent = P.toFixed(2);
+    $("fN").textContent = N;
+    $("fObs").textContent = `${X} / ${N}`;
+    $("fPhat").textContent = fmt(obs(), 3).replace(/0$/, "");
+    $("oneIntro").textContent = `Each shot goes in with probability ${P.toFixed(2)}. Shoot a full set of ${N} and record how many went in.`;
+    $("manyIntro").textContent = `Each dot is one simulated set of ${N} free throws by an ${pct}% shooter, placed at that set's proportion made, p-hat. The dashed line marks Dr. Murphy's p-hat = ${fmt(obs(), 3).replace(/0$/, "")}.`;
+    $("nmLabel").textContent = `${P.toFixed(2)}, ${sd0().toFixed(3)}`;
+    $("h-one").lastChild.textContent = ` Shoot one set as an ${pct}% shooter`;
+  }
+
+  // ---------- one set ----------
+  function buildGrid() {
+    const g = $("shotgrid"); g.innerHTML = "";
+    g.style.gridTemplateColumns = `repeat(${Math.min(20, N)}, 1fr)`;
+    for (let i = 0; i < N; i++) g.appendChild(document.createElement("i"));
+  }
+  function paintSet() {
+    const cells = $("shotgrid").children;
+    for (let i = 0; i < cells.length; i++) cells[i].className = i < set.length ? (set[i] ? "made" : "miss") : "";
+    const made = set.filter(Boolean).length;
+    $("sShots").textContent = set.length;
+    $("sMade").textContent = made;
+    $("sPhat").textContent = set.length ? (made / set.length).toFixed(2) : "—";
+    const done = set.length >= N;
+    ["shoot1", "shoot10", "finish"].forEach((id) => $(id).disabled = done || animating);
+    if (done) $("setMsg").innerHTML = `Set complete: <strong>${made} of ${N}</strong> made, so p-hat = <strong>${(made / N).toFixed(2)}</strong>. This set was added as one dot below. Click <em>New set</em> to shoot again.`;
+    else $("setMsg").textContent = "A finished set is added as one dot on the plot below.";
+  }
+  function completeIfDone() {
+    if (set.length === N) { sims.push(set.filter(Boolean).length / N); drawPlot(); }
+  }
+  function takeShots(k) {
+    for (let i = 0; i < k && set.length < N; i++) set.push(Math.random() < P);
+    completeIfDone(); paintSet();
+  }
+
+  const ball = $("ball"), verdict = $("verdict");
+  function animateShot(made, done) {
+    if (reduce) { verdict.textContent = made ? "SWISH" : "MISS"; done(); return; }
+    animating = true; paintSet();
+    const x0 = 76, y0 = 80, x1 = made ? 266 : 280, y1 = made ? 64 : 60, peak = 8, T = 650;
+    const t0 = performance.now();
+    function frame(now) {
+      let t = Math.min(1, (now - t0) / T);
+      const x = x0 + (x1 - x0) * t;
+      const yLine = y0 + (y1 - y0) * t;
+      const y = yLine - 4 * (Math.max(y0, y1) - peak) * t * (1 - t) * 0.9;
+      ball.setAttribute("cx", x); ball.setAttribute("cy", y);
+      if (t < 1) requestAnimationFrame(frame);
+      else finish2(now);
+    }
+    function finish2(start) {
+      const T2 = 380;
+      function f2(now) {
+        const t = Math.min(1, (now - start) / T2);
+        if (made) { ball.setAttribute("cx", 266); ball.setAttribute("cy", 64 + 70 * t); }
+        else { ball.setAttribute("cx", 280 - 60 * t); ball.setAttribute("cy", 60 - 30 * Math.sin(Math.PI * t) + 70 * t * t); }
+        if (t < 1) requestAnimationFrame(f2);
+        else { verdict.textContent = made ? "SWISH" : "MISS"; animating = false; done();
+               setTimeout(() => { ball.setAttribute("cx", x0); ball.setAttribute("cy", y0); }, 250); }
+      }
+      requestAnimationFrame(f2);
+    }
+    verdict.textContent = "";
+    requestAnimationFrame(frame);
+  }
+
+  $("shoot1").addEventListener("click", () => {
+    if (set.length >= N || animating) return;
+    const made = Math.random() < P;
+    animateShot(made, () => { set.push(made); completeIfDone(); paintSet(); });
+  });
+  $("shoot10").addEventListener("click", () => { verdict.textContent = ""; takeShots(10); });
+  $("finish").addEventListener("click", () => { verdict.textContent = ""; takeShots(N); });
+  $("newSet").addEventListener("click", () => { set = []; verdict.textContent = ""; paintSet(); });
+
+  // ---------- many sets ----------
+  function simulateSets(k) {
+    for (let s = 0; s < k; s++) {
+      let m = 0; for (let i = 0; i < N; i++) if (Math.random() < P) m++;
+      sims.push(m / N);
+    }
+    drawPlot();
+  }
+  document.querySelectorAll("[data-sets]").forEach((b) => b.addEventListener("click", () => simulateSets(+b.dataset.sets)));
+  $("clearPlot").addEventListener("click", () => { sims = []; drawPlot(); });
+  ["cmp", "cut", "showNormal"].forEach((id) => $(id).addEventListener("input", drawPlot));
+
+  function counted(v) {
+    const c = parseFloat($("cut").value), mode = $("cmp").value, eps = 1e-9;
+    if (!Number.isFinite(c)) return false;
+    if (mode === "le") return v <= c + eps;
+    if (mode === "ge") return v >= c - eps;
+    return Math.abs(v - P) >= Math.abs(c - P) - eps;
+  }
+
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  function drawPlot() {
+    if (typeof normalCalc === "function" && $("cCompare")) queueMicrotask(normalCalc);
+    const cv = $("plot"), dpr = window.devicePixelRatio || 1;
+    const W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const ink = css("--ink"), muted = css("--muted"), accent = css("--accent"), accText = css("--accent-text"), edge = css("--accent-edge"), miss = css("--miss"), line = css("--line");
+    const s = sd0();
+    let lo = Math.max(0, P - 4.5 * s), hi = Math.min(1, P + 4.5 * s);
+    lo = Math.min(lo, obs() - 0.02); hi = Math.max(hi, obs() + 0.02);
+    lo = Math.max(0, Math.floor(lo * 50) / 50); hi = Math.min(1, Math.ceil(hi * 50) / 50);
+    const padL = 16, padR = 16, padT = 14, padB = 56;
+    const pw = W - padL - padR, ph = H - padT - padB;
+    const xs = (v) => padL + (v - lo) / (hi - lo) * pw;
+    const base = padT + ph;
+
+    // axis
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(padL, base + 0.5); ctx.lineTo(W - padR, base + 0.5); ctx.stroke();
+    const range = hi - lo, step = range > 0.6 ? 0.1 : range > 0.25 ? 0.05 : 0.02;
+    ctx.fillStyle = muted; ctx.font = "12px Public Sans, system-ui, sans-serif"; ctx.textAlign = "center";
+    for (let t = Math.ceil(lo / step - 1e-9) * step; t <= hi + 1e-9; t += step) {
+      const x = xs(t);
+      ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, base + 5); ctx.stroke();
+      ctx.fillText(t.toFixed(2), x, base + 18);
+    }
+    ctx.fillStyle = ink;
+    const lab1 = `p-hat = proportion of free throws made in ${N} shots`, lab2 = `by an ${Math.round(P * 100)}% free throw shooter`;
+    if (ctx.measureText(lab1 + " " + lab2).width <= pw) ctx.fillText(lab1 + " " + lab2, padL + pw / 2, base + 36);
+    else { ctx.fillText(lab1, padL + pw / 2, base + 34); ctx.fillText(lab2, padL + pw / 2, base + 49); }
+
+    // stacks
+    const bins = new Map();
+    for (const v of sims) { const k = Math.round(v * N); bins.set(k, (bins.get(k) || 0) + 1); }
+    let maxStack = 0; bins.forEach((c) => { if (c > maxStack) maxStack = c; });
+    const binW = pw / ((hi - lo) * N);
+    const d = Math.max(1.2, Math.min(binW * 0.9, 12, maxStack ? (ph - 6) / maxStack : 12));
+    bins.forEach((c, k) => {
+      const v = k / N, x = xs(v), hit = counted(v);
+      ctx.fillStyle = hit ? accent : miss;
+      for (let j = 0; j < c; j++) {
+        const y = base - d / 2 - 2 - j * d;
+        ctx.beginPath(); ctx.arc(x, y, d / 2 * 0.92, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+
+    // normal curve, scaled to dot heights (expected count per bin)
+    if ($("showNormal").checked && sims.length) {
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.6; ctx.beginPath();
+      for (let i = 0; i <= 200; i++) {
+        const v = lo + (hi - lo) * i / 200;
+        const dens = Math.exp(-0.5 * ((v - P) / s) ** 2) / (s * Math.sqrt(2 * Math.PI));
+        const expCount = sims.length * dens / N;
+        const y = base - 2 - expCount * d;
+        i ? ctx.lineTo(xs(v), y) : ctx.moveTo(xs(v), y);
+      }
+      ctx.stroke();
+    }
+
+    // observed line
+    const xo = xs(obs());
+    ctx.setLineDash([5, 4]); ctx.strokeStyle = accText; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(xo, padT); ctx.lineTo(xo, base); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = accText; ctx.font = "600 12px Public Sans, system-ui, sans-serif";
+    ctx.textAlign = xo > W - 140 ? "right" : "left";
+    ctx.fillText(`Dr. Murphy: ${obs().toFixed(2)}`, xo + (ctx.textAlign === "left" ? 6 : -6), padT + 10);
+
+    if (!sims.length) {
+      ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.font = "14px Public Sans, system-ui, sans-serif";
+      ctx.fillText("No sets yet. Finish a set above or click a Simulate button.", padL + pw / 2, padT + ph / 2);
+    }
+
+    // stats + count
+    const n = sims.length;
+    $("tN").textContent = n;
+    if (n) {
+      const m = sims.reduce((a, b) => a + b, 0) / n;
+      const sd = n > 1 ? Math.sqrt(sims.reduce((a, b) => a + (b - m) ** 2, 0) / (n - 1)) : NaN;
+      $("tMean").textContent = m.toFixed(3); $("tSD").textContent = Number.isFinite(sd) ? sd.toFixed(3) : "—";
+      const k = sims.filter(counted).length;
+      const mode = $("cmp").value, c = parseFloat($("cut").value);
+      const desc = mode === "le" ? `p-hat ≤ ${fmt(c)}` : mode === "ge" ? `p-hat ≥ ${fmt(c)}` : `p-hat at least ${fmt(Math.abs(c - P), 2)} away from ${P.toFixed(2)}`;
+      $("result").innerHTML = `<strong>${k}</strong> of ${n} simulated sets had ${desc}: a proportion of <strong>${(k / n).toFixed(3)}</strong>.`;
+    } else {
+      $("tMean").textContent = "—"; $("tSD").textContent = "—";
+      $("result").textContent = "Simulate some sets to count them.";
+    }
+  }
+
+
+  // ---------- Normal model calculation ----------
+  function Phi(z) { // standard Normal CDF (Abramowitz & Stegun 7.1.26)
+    const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+    const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z / 2);
+    return z >= 0 ? (1 + y) / 2 : (1 - y) / 2;
+  }
+  const f = (v, d) => (+v).toFixed(d);
+  const trim = (v) => String(+(+v).toFixed(4));
+  function normalCalc() {
+    const se = sd0(), ph = obs(), lower = ph < P;
+    const z = Math.round((ph - P) / se * 100) / 100;
+    const area = lower ? Phi(z) : 1 - Phi(z);
+    const ok1 = N * P >= 10, ok2 = N * (1 - P) >= 10;
+    $("cCond").innerHTML = `np = ${N}(${f(P,2)}) = ${trim(N * P)} ${ok1 ? "≥" : "<"} 10 &nbsp;and&nbsp; n(1 − p) = ${N}(${f(1 - P,2)}) = ${trim(N * (1 - P))} ${ok2 ? "≥" : "<"} 10${ok1 && ok2 ? ", so a Normal model is reasonable." : ". The Normal model is not reliable here; trust the simulation."}`;
+    $("cModel").innerHTML = `If the claim is true (p = ${f(P,2)}), then the sampling distribution of p-hat is approximately Normally distributed, N(${f(P,2)}, ${trim(se.toFixed(4))}).`;
+    $("cSE").innerHTML = `σ<sub>p-hat</sub> = <span class="sqrt"><span><span class="frac"><span>p(1 − p)</span><span>n</span></span></span></span> = <span class="sqrt"><span><span class="frac"><span>(${f(P,2)})(${f(1 - P,2)})</span><span>${N}</span></span></span></span> = <span class="sqrt"><span>${trim((P * (1 - P) / N).toFixed(6))}</span></span> = <span class="ans">${trim(se.toFixed(4))}</span>`;
+    $("cZ").innerHTML = `z-score = <span class="frac"><span>p-hat − p</span><span>σ<sub>p-hat</sub></span></span> = <span class="frac"><span>${f(ph, 2)} − ${f(P,2)}</span><span>${trim(se.toFixed(4))}</span></span> = <span class="ans">${z.toFixed(2)}</span>`;
+    $("cZ").innerHTML += `<div style="line-height:1.5;margin-top:6px">The z-score of Dr. Murphy's observed free-throw percentage of ${f(ph, 2)} is <strong>${z.toFixed(2)}</strong>. ` +
+      (z === 0 ? `This tells us Dr. Murphy's result is right at the sampling distribution mean.` :
+       `This tells us Dr. Murphy's result is ${Math.abs(z).toFixed(2)} standard deviations ${z < 0 ? "below" : "above"} the sampling distribution mean.`) + `</div>`;
+    $("cP").innerHTML = lower
+      ? `P(p-hat ≤ ${f(ph, 2)}) = P(Z ≤ ${z.toFixed(2)}) = <span class="ans">${area.toFixed(4)}</span> &nbsp;<span class="muted">(Z-table: area to the left of ${z.toFixed(2)})</span>`
+      : `P(p-hat ≥ ${f(ph, 2)}) = P(Z ≥ ${z.toFixed(2)}) = 1 − ${Phi(z).toFixed(4)} = <span class="ans">${area.toFixed(4)}</span> &nbsp;<span class="muted">(1 − table entry)</span>`;
+    const pct = Math.round(P * 100), dir = lower ? "<" : ">", word = lower ? "less" : "more";
+    $("cHyp").innerHTML = `H<sub>0</sub>: p = ${f(P,2)} &nbsp;(Dr. Murphy is an ${pct}% free throw shooter)<br>H<sub>1</sub>: p ${dir} ${f(P,2)} &nbsp;(Dr. Murphy makes ${word} than ${pct}% of her free throws)<br><span class="muted" style="font-size:0.9rem">p = the true proportion of free throws Dr. Murphy makes</span>`;
+    const sig = area < 0.05;
+    $("cDec").innerHTML = `<p><b class="lbl">p-value interpretation</b>If Dr. Murphy IS an ${pct}% free throw shooter, then the probability of observing a sample of ${N} shots with p-hat = ${f(ph, 2)} or ${lower ? "lower" : "higher"} is <strong>${area.toFixed(4)}</strong>.</p>` +
+      (sig
+        ? `<p><b class="lbl">Decision and conclusion</b>Since this p-value is below a cutoff alpha value of α = 0.05, we <strong>reject the null hypothesis</strong>. We have statistically significant evidence that Dr. Murphy is NOT an ${pct}% free throw shooter: her true free throw percentage is ${word} than ${pct}%.</p>`
+        : `<p><b class="lbl">Decision and conclusion</b>Since this p-value is not below a cutoff alpha value of α = 0.05, we <strong>do not reject the null hypothesis</strong>. We do not have statistically significant evidence that Dr. Murphy's true free throw percentage is ${word} than ${pct}%.</p>`);
+    const sim = sims.length ? sims.filter((v) => lower ? v <= ph + 1e-9 : v >= ph - 1e-9).length / sims.length : NaN;
+    $("cCompare").innerHTML = `If Dr. Murphy really is an ${Math.round(P * 100)}% shooter, the Normal model says a set of ${N} with p-hat ${lower ? "≤" : "≥"} ${f(ph, 2)} happens only about <strong>${(area * 100).toFixed(2)}%</strong> of the time.` +
+      (sims.length ? ` Your simulation: <strong>${f(sim, 3)}</strong> of ${sims.length} sets. With p-hat taking only whole-shot values, the simulated proportion usually runs a little higher than the Normal area.` : ` Run some sets in Step 2 to compare with your simulation.`);
+    drawZ(z, lower, se);
+  }
+  function drawZ(z, lower, se) {
+    const cv = $("zplot"), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const ink = css("--ink"), muted = css("--muted"), accent = css("--accent"), accText = css("--accent-text");
+    const padL = 44, padR = 14, base = H - 44, top = 10, xs = (t) => padL + (t + 3.8) / 7.6 * (W - padL - padR);
+    const pdf = (t) => Math.exp(-t * t / 2), ys = (t) => base - pdf(t) * (base - top);
+    const zc = Math.max(-3.8, Math.min(3.8, z));
+    ctx.fillStyle = accent; ctx.beginPath();
+    const a = lower ? -3.8 : zc, b = lower ? zc : 3.8;
+    ctx.moveTo(xs(a), base); for (let i = 0; i <= 80; i++) { const t = a + (b - a) * i / 80; ctx.lineTo(xs(t), ys(t)); } ctx.lineTo(xs(b), base); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let i = 0; i <= 200; i++) { const t = -3.8 + 7.6 * i / 200; i ? ctx.lineTo(xs(t), ys(t)) : ctx.moveTo(xs(t), ys(t)); } ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL, base + 0.5); ctx.lineTo(W - padR, base + 0.5); ctx.stroke();
+    ctx.font = "11px Public Sans, system-ui, sans-serif"; ctx.textAlign = "center";
+    for (let k = -3; k <= 3; k++) {
+      ctx.strokeStyle = ink; ctx.beginPath(); ctx.moveTo(xs(k), base); ctx.lineTo(xs(k), base + 4); ctx.stroke();
+      ctx.fillStyle = muted; ctx.fillText(String(k), xs(k), base + 16);
+      ctx.fillText((P + k * se).toFixed(se < 0.05 ? 2 : 3), xs(k), base + 30);
+    }
+    ctx.textAlign = "left"; ctx.fillText("z", 2, base + 16); ctx.fillText("p-hat", 2, base + 30);
+    ctx.strokeStyle = accText; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(xs(zc), top); ctx.lineTo(xs(zc), base); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = accText; ctx.font = "600 12px Public Sans, system-ui, sans-serif"; ctx.textAlign = zc < 0 ? "right" : "left";
+    ctx.fillText(`z = ${z.toFixed(2)}`, xs(zc) + (zc < 0 ? -6 : 6), top + 14);
+  }
+
+  // ---------- setup ----------
+  $("applySetup").addEventListener("click", () => {
+    const p = parseFloat($("inP").value), n = parseInt($("inN").value, 10), x = parseInt($("inX").value, 10);
+    if (!(p > 0 && p < 1) || !(n >= 5 && n <= 400) || !(x >= 0 && x <= n)) {
+      $("setMsg").textContent = "Check the setup: p must be between 0 and 1, n between 5 and 400, and made shots between 0 and n.";
+      return;
+    }
+    P = p; N = n; X = x; set = []; sims = [];
+    $("cut").value = (X / N).toFixed(2);
+    $("cmp").value = X / N < P ? "le" : "ge";
+    updateText(); buildGrid(); paintSet(); drawPlot(); normalCalc();
+  });
+
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(drawPlot, 80); });
+  if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", drawPlot);
+  new MutationObserver(drawPlot).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  updateText(); buildGrid(); paintSet(); normalCalc();
+  drawPlot();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawPlot);
+})();
+</script>
+
+</body></html>
