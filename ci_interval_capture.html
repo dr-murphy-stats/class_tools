@@ -76,7 +76,8 @@ button.ghost:hover { background: var(--soft); filter: none; }
 .bad { color: var(--miss); font-weight: 600; }
 .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .92em; line-height: 1.15; margin: 0 2px; }
 .frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px; }
-.rad { border-top: 1px solid currentColor; padding: 0 2px; }
+.rad { border-top: 1px solid currentColor; padding: 0 2px; display: inline-block; line-height: 1.2; }
+.rad .frac > span:first-child { padding-top: .35em; }
 .chartbox { overflow-x: auto; }
 svg text { font-family: var(--body); fill: var(--muted); font-size: 12px; }
 svg .ptext { fill: var(--ink); font-weight: 600; }
@@ -87,6 +88,19 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
 .tally .big.miss { color: var(--miss); }
 .qs { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 70ch; }
 .oneline { margin: 0; }
+.ph { position: relative; display: inline-block; font-style: italic; text-transform: none; line-height: 1; padding-right: .04em; }
+.ph::before { content: "\02C6"; position: absolute; left: 50%; top: -.26em; transform: translateX(-42%); font-style: normal; font-size: .95em; line-height: 1; }
+sub .ph::before { top: -.24em; }
+.zsvg { display: block; width: 100%; max-width: 380px; height: auto; margin-top: 6px; }
+.mini { overflow-x: auto; }
+.mini table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .95rem; min-width: 100%; }
+.mini th { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .8rem; color: var(--muted); text-align: right; padding: 6px 10px; border-bottom: 2px solid var(--ink); background: var(--gold-soft); white-space: nowrap; }
+.mini td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.mini th:first-child, .mini td:first-child { text-align: left; }
+.sampinfo { display: inline-flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; justify-self: start; background: var(--gold-soft); border: 1px solid var(--gold); border-radius: 6px; padding: 6px 12px; font-variant-numeric: tabular-nums; }
+.sampinfo b { font-family: var(--display); font-size: 1.25rem; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: .95rem; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--hit); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -141,7 +155,7 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
     <div class="stats">
       <div class="stat"><span class="label" id="xLabel">Successes x</span><b id="xOut">–</b></div>
       <div class="stat"><span class="label">Sample size n</span><b id="nOut">–</b></div>
-      <div class="stat"><span class="label">Sample proportion p̂</span><b id="phatOut">–</b></div>
+      <div class="stat"><span class="label">Sample proportion <span class='ph'>p</span></span><b id="phatOut">–</b></div>
     </div>
   </section>
 
@@ -171,7 +185,7 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
       <span><span class="sw" style="background:var(--hit)"></span>captures p</span>
       <span><span class="sw" style="background:var(--miss)"></span>misses p</span>
       <span><span class="sw" style="background:var(--gold)"></span>your interval</span>
-      <span id="failLegend" hidden><span class="sw" style="background:transparent;border:1.5px dashed var(--fail)"></span>dashed: conditions not met (np̂ or n(1−p̂) &lt; 10)</span>
+      <span id="failLegend" hidden><span class="sw" style="background:transparent;border:1.5px dashed var(--fail)"></span>dashed: conditions not met (n<span class='ph'>p</span> or n(1−<span class='ph'>p</span>) &lt; 10)</span>
     </div>
     <div class="chartbox"><svg id="chart" role="img" aria-label="Confidence intervals compared with the true proportion"></svg></div>
     <p class="note" id="chartNote"></p>
@@ -182,14 +196,40 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
     <p class="note">Change the confidence level above to recompute every interval from the same samples. Changing <i>p</i> or <i>n</i> starts over with a new sample.</p>
   </section>
 
+  <section class="part" aria-labelledby="h5">
+    <h2 id="h5"><span class="num">Part 4</span> One sample, four confidence levels</h2>
+    <p>All four intervals below are built from <b>your</b> sample in Part 1, so every interval is centered at the same <span class='ph'>p</span>. The only thing that changes is the confidence coefficient z<sub>c</sub>.</p>
+    <div class="row"><label class="toggle" for="showP4"><input type="checkbox" id="showP4"><span>Show the true <i>p</i></span></label></div>
+    <div class="sampinfo" id="info4"></div>
+    <div class="chartbox"><svg id="levels" role="img" aria-label="Confidence intervals at 90, 95, 98 and 99 percent from one sample"></svg></div>
+    <div class="mini"><table id="levelsTable"></table></div>
+  </section>
+
+  <section class="part" aria-labelledby="h6">
+    <h2 id="h6"><span class="num">Part 5</span> Same confidence level, different sample sizes</h2>
+    <p>Each row is a sample of size <i>n</i> from the same population, with a <span id="cTxt5">95%</span> confidence interval (change the level at the top of the page). With the first box checked, every row uses your <span class='ph'>p</span> from Part 1, so the only thing that changes is <i>n</i>. Uncheck it to give each row its own new random sample.</p>
+    <div class="row">
+      <button id="drawSizes" type="button">Draw new samples</button>
+      <label class="toggle" for="holdP"><input type="checkbox" id="holdP" checked><span>Hold <span class='ph'>p</span> at your sample's value</span></label>
+      <label class="toggle" for="showP5"><input type="checkbox" id="showP5" checked><span>Show the true <i>p</i></span></label>
+    </div>
+    <div class="sampinfo" id="info5"></div>
+    <div class="chartbox"><svg id="sizes" role="img" aria-label="Confidence intervals for samples of different sizes"></svg></div>
+    <div class="mini"><table id="sizesTable"></table></div>
+    <p class="note">Compare <i>n</i> = 100, 400 and 1600: each time the sample size is multiplied by 4, the margin of error is cut in half.</p>
+  </section>
+
   <section class="part" aria-labelledby="h4">
     <h2 id="h4">What do you notice?</h2>
     <ol class="qs">
       <li>Did your interval from Part 1 capture <i>p</i>? Could you have known that without seeing the solid line?</li>
-      <li>Look at the intervals that miss. Where are their sample proportions p̂ compared with <i>p</i>?</li>
+      <li>Look at the intervals that miss. Where are their sample proportions <span class='ph'>p</span> compared with <i>p</i>?</li>
       <li>After 100 or more intervals, how close is the percent captured to the confidence level? Why isn't it exactly equal?</li>
       <li>Switch from 95% to 90%, then to 99%. What happens to the widths of the intervals and to the percent captured?</li>
       <li>Try left-handed students with <i>n</i> = 30. What happens to the percent captured, and which intervals are dashed?</li>
+      <li>In Part 4, how does the margin of error change from 90% to 99% confidence? Which number in the formula ME = z<sub>c</sub> · s<sub><span class='ph'>p</span></sub> is changing?</li>
+      <li>In Part 5, about how much larger must <i>n</i> be to cut the margin of error in half? Why does the square root in s<sub><span class='ph'>p</span></sub> explain this?</li>
+      <li>Is there a trade-off between confidence and precision? How could you get <i>both</i> a high confidence level and a narrow interval?</li>
     </ol>
   </section>
 </div>
@@ -219,7 +259,9 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
   var MAXROWS = 200;
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { ctx: "ft", p: 0.8, n: 100, c: "0.95", mine: null, phats: [], open: {} };
+  var state = { ctx: "ft", p: 0.8, n: 100, c: "0.95", mine: null, phats: [], open: {}, sizePh: {} };
+  var SIZES = [25, 50, 100, 200, 400, 800, 1600];
+  var LEVELS = ["0.90", "0.95", "0.98", "0.99"];
 
   function f(v, d) { return (Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d); }
   function pct(v) { return (v * 100).toFixed(1).replace(/\.0$/, "") + "%"; }
@@ -251,7 +293,8 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
     $("sampleIntro").textContent = CTX[state.ctx].intro;
     $("xLabel").textContent = CTX[state.ctx].xLabel;
     $("cTxt").textContent = Math.round(parseFloat(state.c) * 100) + "%";
-    if (reset || changed) { drawMine(); } else { renderSteps(); renderChart(); }
+    $("cTxt5").textContent = Math.round(parseFloat(state.c) * 100) + "%";
+    if (reset || changed) { drawMine(); } else { renderSteps(); renderChart(); renderLevels(); renderSizes(); }
   }
 
   // ---------- part 1 ----------
@@ -259,7 +302,8 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
     var s = sample(state.n, state.p);
     state.mine = { x: s.x, phat: s.x / state.n, arr: s.arr };
     state.phats = [state.mine.phat];
-    renderGrid(); renderSteps(); renderChart();
+    drawSizeSamples();
+    renderGrid(); renderSteps(); renderChart(); renderLevels(); renderSizes();
   }
   function renderGrid() {
     var g = $("grid"), n = state.n, cell = n <= 100 ? 14 : n <= 300 ? 10 : n <= 800 ? 7 : 5;
@@ -285,21 +329,21 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
     var lo = f(Math.max(ci.lo, 0), 3), hi = f(Math.min(ci.hi, 1), 3);
     var steps = [
       ["1. Parameter and confidence level",
-        "<p><i>p</i> = the true proportion of " + c.param + ".</p><p>Confidence level <i>c</i> = " + cP + "%. No hypotheses: we are estimating <i>p</i>, not testing a claim.</p><p>Observed sample proportion p̂ = " + m.x + "/" + n + " = " + f(ph, 4) + "</p>"],
-      ["2. Check the A&amp;C (use p̂)",
+        "<p><i>p</i> = the true proportion of " + c.param + ".</p><p>Confidence level <i>c</i> = " + cP + "%. No hypotheses: we are estimating <i>p</i>, not testing a claim.</p><p>Observed sample proportion <span class='ph'>p</span> = " + m.x + "/" + n + " = " + f(ph, 4) + "</p>"],
+      ["2. Check the A&amp;C (use <span class='ph'>p</span>)",
         "<p>Random: each " + c.unit.replace(/s$/, "") + " is a random, independent trial.</p>" +
-        "<p><i>n</i>p̂ = " + n + "(" + f(ph, 3) + ") = " + f(n * ph, 1) + (n * ph >= 10 ? ' <span class="ok">≥ 10 ✓</span>' : ' <span class="bad">&lt; 10 ✗</span>') + "</p>" +
-        "<p><i>n</i>(1 − p̂) = " + n + "(" + f(1 - ph, 3) + ") = " + f(n * (1 - ph), 1) + (n * (1 - ph) >= 10 ? ' <span class="ok">≥ 10 ✓</span>' : ' <span class="bad">&lt; 10 ✗</span>') + "</p>" +
+        "<p><i>n</i><span class='ph'>p</span> = " + n + "(" + f(ph, 3) + ") = " + f(n * ph, 1) + (n * ph >= 10 ? ' <span class="ok">≥ 10 ✓</span>' : ' <span class="bad">&lt; 10 ✗</span>') + "</p>" +
+        "<p><i>n</i>(1 − <span class='ph'>p</span>) = " + n + "(" + f(1 - ph, 3) + ") = " + f(n * (1 - ph), 1) + (n * (1 - ph) >= 10 ? ' <span class="ok">≥ 10 ✓</span>' : ' <span class="bad">&lt; 10 ✗</span>') + "</p>" +
         (ci.ok ? "" : '<p class="bad">A condition fails, so the Normal model (and this interval) may not be trustworthy.</p>')],
       ["3. Point estimate and standard error",
-        "<p>p̂ = " + fr("x", "n") + " = " + fr(m.x, n) + " = <span class=\"hl\">" + f(ph, 4) + "</span></p>" +
-        "<p>s<sub>p̂</sub> = " + sq(fr("p̂(1 − p̂)", "n")) + " = " + sq(fr(f(ph, 4) + "(" + f(1 - ph, 4) + ")", n)) + " = <span class=\"hl\">" + f(ci.se, 4) + "</span></p>"],
+        "<p><span class='ph'>p</span> = " + fr("x", "n") + " = " + fr(m.x, n) + " = <span class=\"hl\">" + f(ph, 4) + "</span></p>" +
+        "<p>s<sub><span class='ph'>p</span></sub> = " + sq(fr("<span class='ph'>p</span>(1 − <span class='ph'>p</span>)", "n")) + " = " + sq(fr(f(ph, 4) + "(" + f(1 - ph, 4) + ")", n)) + " = <span class=\"hl\">" + f(ci.se, 4) + "</span></p>"],
       ["4. Confidence coefficient z<sub>c</sub>",
         "<p>Middle area " + f(parseFloat(state.c), 2) + ", so each tail has " + f((1 - parseFloat(state.c)) / 2, 3).replace(/0+$/, "") +
-        ". Look up area " + f((1 + parseFloat(state.c)) / 2, 3).replace(/0+$/, "") + " in the Z-table: z<sub>c</sub> = <span class=\"hl\">" + ci.z + "</span></p>"],
+        ". Look up area " + f((1 + parseFloat(state.c)) / 2, 3).replace(/0+$/, "") + " in the Z-table: z<sub>c</sub> = <span class=\"hl\">" + ci.z + "</span></p>" + zcSvg(parseFloat(state.c), ci.z)],
       ["5. Margin of error and interval",
-        "<p>ME = z<sub>c</sub> · s<sub>p̂</sub> = " + ci.z + "(" + f(ci.se, 4) + ") = <span class=\"hl\">" + f(ci.E, 4) + "</span></p>" +
-        "<p>p̂ ± ME = " + f(ph, 4) + " ± " + f(ci.E, 4) + " → <span class=\"hl\">" + lo + " &lt; <i>p</i> &lt; " + hi + "</span></p>"],
+        "<p>ME = z<sub>c</sub> · s<sub><span class='ph'>p</span></sub> = " + ci.z + "(" + f(ci.se, 4) + ") = <span class=\"hl\">" + f(ci.E, 4) + "</span></p>" +
+        "<p><span class='ph'>p</span> ± ME = " + f(ph, 4) + " ± " + f(ci.E, 4) + " → <span class=\"hl\">" + lo + " &lt; <i>p</i> &lt; " + hi + "</span></p>"],
       ["6. Interpret in context",
         "<p><i>We are " + cP + "% confident that the true proportion of " + c.param + " is between " + lo + " and " + hi + ".</i></p>"]
     ];
@@ -371,7 +415,7 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
       out.push('<line x1="' + xx + '" x2="' + xx + '" y1="' + (padT - 4) + '" y2="' + (H - padB) + '" stroke="var(--rule)" stroke-width="1"/>');
       out.push('<text x="' + xx + '" y="' + (H - padB + 16) + '" text-anchor="middle">' + (+t.toFixed(4)) + "</text>");
     }
-    out.push('<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle">sample proportion p̂ and its ' + Math.round(parseFloat(state.c) * 100) + '% interval</text>');
+    out.push('<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle">sample proportions and their ' + Math.round(parseFloat(state.c) * 100) + '% intervals</text>');
     var thick = Math.max(1.2, Math.min(4, rowH * 0.5)), dot = Math.max(1.4, Math.min(4.5, rowH * 0.32));
     rows.forEach(function (idx, r) {
       var c = ints[idx], ph = all[idx], y = padT + r * rowH + rowH / 2, mine = idx === 0;
@@ -417,13 +461,129 @@ svg .ptext { fill: var(--ink); font-weight: 600; }
     svg.innerHTML = o.join("");
   }
 
+  // ---------- z_c picture (step 4) ----------
+  function zcSvg(c, z) {
+    var W = 380, H = 170, pl = 16, pr = 16, base = 104, top = 22, xr = 3.6;
+    var X = function (v) { return pl + (v + xr) / (2 * xr) * (W - pl - pr); };
+    var phi = function (v) { return Math.exp(-v * v / 2); };
+    var Y = function (v) { return base - phi(v) * (base - top); };
+    var pts = [], mid = [], v;
+    for (v = -xr; v <= xr + 1e-9; v += 0.05) pts.push(X(v).toFixed(1) + "," + Y(v).toFixed(1));
+    mid.push(X(-z).toFixed(1) + "," + base);
+    for (v = -z; v <= z + 1e-9; v += 0.05) mid.push(X(v).toFixed(1) + "," + Y(v).toFixed(1));
+    mid.push(X(z).toFixed(1) + "," + Y(z).toFixed(1), X(z).toFixed(1) + "," + base);
+    var tail = f((1 - c) / 2, 3).replace(/0+$/, ""), o = [];
+    o.push('<polygon points="' + mid.join(" ") + '" fill="var(--gold-soft)" stroke="none"/>');
+    o.push('<polyline points="' + pts.join(" ") + '" fill="none" stroke="var(--ink)" stroke-width="2"/>');
+    o.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + base + '" y2="' + base + '" stroke="var(--ink)" stroke-width="1.2"/>');
+    [-z, z].forEach(function (zz) {
+      o.push('<line x1="' + X(zz) + '" x2="' + X(zz) + '" y1="' + base + '" y2="' + (Y(zz) - 14) + '" stroke="var(--ink)" stroke-dasharray="4 3" stroke-width="1.2"/>');
+    });
+    o.push('<text x="' + X(0) + '" y="' + (base - 34) + '" text-anchor="middle" class="ptext">middle</text>');
+    o.push('<text x="' + X(0) + '" y="' + (base - 18) + '" text-anchor="middle" class="ptext">' + f(c, 2) + '</text>');
+    o.push('<text x="' + X(-z - 0.75) + '" y="' + (base - 22) + '" text-anchor="middle">' + tail + '</text>');
+    o.push('<text x="' + X(z + 0.75) + '" y="' + (base - 22) + '" text-anchor="middle">' + tail + '</text>');
+    o.push('<text x="' + X(-z) + '" y="' + (base + 17) + '" text-anchor="middle">−' + z + '</text>');
+    o.push('<text x="' + X(0) + '" y="' + (base + 17) + '" text-anchor="middle">0</text>');
+    o.push('<text x="' + X(z) + '" y="' + (base + 17) + '" text-anchor="middle">' + z + '</text>');
+    o.push('<text x="' + X(-z) + '" y="' + (base + 33) + '" text-anchor="middle">−z<tspan baseline-shift="sub" font-size="9">c</tspan></text>');
+    o.push('<text x="' + X(z) + '" y="' + (base + 33) + '" text-anchor="middle">z<tspan baseline-shift="sub" font-size="9">c</tspan></text>');
+    o.push('<text x="' + X(0) + '" y="' + (base + 56) + '" text-anchor="middle" class="ptext">area to the left of z<tspan baseline-shift="sub" font-size="9">c</tspan> = ' + f(c, 2) + ' + ' + tail + ' = ' + f((1 + c) / 2, 3).replace(/0+$/, "") + '</text>');
+    return '<svg class="zsvg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Standard Normal curve with the middle area shaded">' + o.join("") + "</svg>";
+  }
+
+  // ---------- shared interval-row chart (parts 4 and 5) ----------
+  function rowChart(svg, rows, showP, axisLabel) {
+    var W = Math.max(svg.parentNode.clientWidth, 300), padL = 74, padR = 16, padT = showP ? 28 : 12, padB = 38, rowH = 30;
+    var H = padT + rows.length * rowH + padB;
+    var lo = 1, hi = 0;
+    rows.forEach(function (r) { lo = Math.min(lo, Math.max(0, r.lo)); hi = Math.max(hi, Math.min(1, r.hi)); });
+    if (showP) { lo = Math.min(lo, state.p); hi = Math.max(hi, state.p); }
+    var padv = (hi - lo) * 0.06; lo = Math.max(0, lo - padv); hi = Math.min(1, hi + padv);
+    var x = function (v) { return padL + (v - lo) / (hi - lo) * (W - padL - padR); };
+    var o = [], st = niceStep(hi - lo), t0 = Math.ceil(lo / st) * st;
+    for (var t = t0; t <= hi + 1e-9; t += st) {
+      o.push('<line x1="' + x(t) + '" x2="' + x(t) + '" y1="' + (padT - 4) + '" y2="' + (H - padB) + '" stroke="var(--rule)"/>');
+      o.push('<text x="' + x(t) + '" y="' + (H - padB + 16) + '" text-anchor="middle">' + (+t.toFixed(4)) + "</text>");
+    }
+    o.push('<text x="' + ((padL + W - padR) / 2) + '" y="' + (H - 4) + '" text-anchor="middle">' + axisLabel + "</text>");
+    rows.forEach(function (r, i) {
+      var y = padT + i * rowH + rowH / 2, col = showP ? (r.hit ? "var(--hit)" : "var(--miss)") : "var(--hit)";
+      o.push('<text x="' + (padL - 10) + '" y="' + (y + 4) + '" text-anchor="end" class="ptext">' + r.label + "</text>");
+      o.push('<line x1="' + x(Math.max(lo, r.lo)) + '" x2="' + x(Math.min(hi, r.hi)) + '" y1="' + y + '" y2="' + y + '" stroke="' + col + '" stroke-width="5"' + (r.ok ? "" : ' stroke-dasharray="6 4"') + "/>");
+      [r.lo, r.hi].forEach(function (e) { if (e >= lo && e <= hi) o.push('<line x1="' + x(e) + '" x2="' + x(e) + '" y1="' + (y - 7) + '" y2="' + (y + 7) + '" stroke="' + col + '" stroke-width="2"/>'); });
+      o.push('<circle cx="' + x(r.ph) + '" cy="' + y + '" r="4.5" fill="var(--panel)" stroke="' + col + '" stroke-width="2.5"/>');
+    });
+    if (showP) {
+      var xp = x(state.p);
+      o.push('<line x1="' + xp + '" x2="' + xp + '" y1="' + (padT - 8) + '" y2="' + (H - padB) + '" stroke="var(--ink)" stroke-width="2"/>');
+      o.push('<text class="ptext" x="' + xp + '" y="' + (padT - 12) + '" text-anchor="middle">true p = ' + state.p + "</text>");
+    }
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    svg.innerHTML = o.join("");
+  }
+
+  function ciAt(ph, n, z) {
+    var se = Math.sqrt(ph * (1 - ph) / n), E = z * se;
+    return { lo: ph - E, hi: ph + E, se: se, E: E, z: z, ph: ph,
+             ok: n * ph >= 10 && n * (1 - ph) >= 10, hit: ph - E <= state.p && state.p <= ph + E };
+  }
+  var PHS = "<span class='ph'>p</span>";
+
+  // ---------- part 4 ----------
+  function renderLevels() {
+    if (!state.mine) return;
+    var ph = state.mine.phat, n = state.n;
+    $("info4").innerHTML = '<span class="label">Your sample</span><span>x = ' + state.mine.x + ' of n = ' + n + '</span><span>' + PHS + ' = <b>' + f(ph, 3) + '</b></span><span>s<sub>' + PHS + '</sub> = ' + f(Math.sqrt(ph * (1 - ph) / n), 4) + '</span>';
+    var rows = LEVELS.map(function (c) {
+      var r = ciAt(ph, n, ZC[c]); r.label = Math.round(parseFloat(c) * 100) + "%"; r.c = c; return r;
+    });
+    rowChart($("levels"), rows, $("showP4").checked, "intervals from your one sample");
+    var h = "<thead><tr><th>Confidence level</th><th>z<sub>c</sub></th><th>s<sub>" + PHS + "</sub></th><th>ME = z<sub>c</sub> · s<sub>" + PHS + "</sub></th><th>Interval</th><th>Width = 2·ME</th></tr></thead><tbody>";
+    rows.forEach(function (r) {
+      h += "<tr><td>" + r.label + "</td><td>" + r.z + "</td><td>" + f(r.se, 4) + "</td><td>" + f(r.E, 4) + "</td><td>" +
+        f(Math.max(0, r.lo), 3) + " to " + f(Math.min(1, r.hi), 3) + "</td><td>" + f(2 * r.E, 4) + "</td></tr>";
+    });
+    $("levelsTable").innerHTML = h + "</tbody>";
+  }
+
+  // ---------- part 5 ----------
+  function drawSizeSamples() {
+    state.sizePh = {};
+    SIZES.forEach(function (n) { state.sizePh[n] = sample(n, state.p).x / n; });
+  }
+  function renderSizes() {
+    if (!state.mine) return;
+    var hold = $("holdP").checked, z = ZC[state.c];
+    var rows = SIZES.map(function (n) {
+      var r = ciAt(hold ? state.mine.phat : state.sizePh[n], n, z); r.label = "n = " + n; r.n = n; return r;
+    });
+    $("info5").innerHTML = hold
+      ? '<span class="label">Every row uses your sample</span><span>' + PHS + ' = <b>' + f(state.mine.phat, 3) + '</b></span><span>' + Math.round(parseFloat(state.c) * 100) + '% confidence, z<sub>c</sub> = ' + z + '</span>'
+      : '<span class="label">New random samples</span><span>each row has its own ' + PHS + ' (see the table)</span><span>your Part 1 ' + PHS + ' = ' + f(state.mine.phat, 3) + '</span>';
+    $("drawSizes").disabled = hold;
+    $("drawSizes").style.opacity = hold ? 0.45 : 1;
+    rowChart($("sizes"), rows, $("showP5").checked, Math.round(parseFloat(state.c) * 100) + "% confidence intervals");
+    var h = "<thead><tr><th>Sample size n</th><th>" + PHS + "</th><th>s<sub>" + PHS + "</sub></th><th>ME</th><th>Interval</th><th>Conditions</th></tr></thead><tbody>";
+    rows.forEach(function (r) {
+      h += "<tr><td>" + r.n + "</td><td>" + f(r.ph, 3) + "</td><td>" + f(r.se, 4) + "</td><td>" + f(r.E, 4) + "</td><td>" +
+        f(Math.max(0, r.lo), 3) + " to " + f(Math.min(1, r.hi), 3) + "</td><td>" + (r.ok ? '<span class="ok">met ✓</span>' : '<span class="bad">not met ✗</span>') + "</td></tr>";
+    });
+    $("sizesTable").innerHTML = h + "</tbody>";
+  }
+
   // ---------- wiring ----------
   $("ctx").addEventListener("change", function () { applyCtx(this.value); });
   $("pIn").addEventListener("change", function () { readSettings(false); });
   $("nIn").addEventListener("change", function () { readSettings(false); });
   $("cIn").addEventListener("change", function () { readSettings(false); });
   $("drawMine").addEventListener("click", drawMine);
-  var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(renderChart, 120); });
+  var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { renderChart(); renderLevels(); renderSizes(); }, 120); });
+  $("showP4").addEventListener("change", renderLevels);
+  $("showP5").addEventListener("change", renderSizes);
+  $("holdP").addEventListener("change", renderSizes);
+  $("drawSizes").addEventListener("click", function () { drawSizeSamples(); renderSizes(); });
   applyCtx("ft");
 })();
 </script>
