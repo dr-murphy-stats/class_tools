@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Confidence Interval Capture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one narrow working column; three numbered parts that follow the class's CI steps, chart full-width in Part 3 */
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #1d2430;
+  --muted: #5b6575;
+  --rule: #d9dee6;
+  --soft: #eef1f5;
+  --hit: #3c78d8;
+  --miss: #d1495b;
+  --gold: #f1c232;
+  --gold-soft: #fdf3cf;
+  --gold-ink: #6b5200;
+  --fail: #9aa3b2;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --panel: #1a2029; --ink: #e8ecf2; --muted: #a2acbb; --rule: #2e3643; --soft: #222a35;
+    --hit: #78a6f0; --miss: #f07a8a; --gold: #f1c232; --gold-soft: #3a3214; --gold-ink: #f6d877; --fail: #6c7686;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1a2029; --ink: #e8ecf2; --muted: #a2acbb; --rule: #2e3643; --soft: #222a35;
+  --hit: #78a6f0; --miss: #f07a8a; --gold: #f1c232; --gold-soft: #3a3214; --gold-ink: #f6d877; --fail: #6c7686;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1rem; line-height: 1.45; }
+.wrap { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 18px; }
+header h1 { font-family: var(--display); font-weight: 700; font-size: clamp(1.9rem, 5vw, 2.6rem); line-height: 1.05; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 65ch; }
+.label { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .82rem; color: var(--muted); }
+section.part { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.part h2 { font-family: var(--display); font-weight: 700; font-size: 1.45rem; margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.part h2 .num { font-size: .95rem; color: var(--gold-ink); background: var(--gold-soft); border: 1px solid var(--gold); border-radius: 999px; padding: 0 9px; }
+.part > p { margin: 0; max-width: 70ch; }
+.settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+select, input[type=number] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; width: 100%; }
+select:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.src { font-size: .85rem; color: var(--muted); margin: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font-family: var(--display); font-weight: 600; font-size: 1.02rem; letter-spacing: .03em; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--ink); background: var(--ink); color: var(--panel); }
+button.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+button:hover { filter: brightness(1.12); }
+button.ghost:hover { background: var(--soft); filter: none; }
+.grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.grid i { width: var(--cell, 12px); height: var(--cell, 12px); border-radius: 2px; background: var(--soft); border: 1px solid var(--rule); display: block; }
+.grid i.s { background: var(--gold); border-color: var(--gold); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .9rem; color: var(--muted); align-items: center; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px 28px; font-variant-numeric: tabular-nums; }
+.stat b { display: block; font-family: var(--display); font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.steps { display: grid; gap: 8px; }
+.step { border: 1px solid var(--rule); border-left: 4px solid var(--gold); border-radius: 6px; padding: 10px 12px; background: var(--soft); display: grid; gap: 6px; min-width: 0; }
+.step .top { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.step .top strong { font-family: var(--display); font-size: 1.12rem; font-weight: 600; }
+.step .ans { font-variant-numeric: tabular-nums; overflow-x: auto; }
+.step .ans p { margin: 2px 0; }
+.step button { font-size: .9rem; padding: 4px 10px; }
+.hl { background: var(--gold-soft); border-bottom: 2px solid var(--gold); padding: 0 3px; font-weight: 600; white-space: nowrap; }
+.ok { color: var(--hit); font-weight: 600; }
+.bad { color: var(--miss); font-weight: 600; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .92em; line-height: 1.15; margin: 0 2px; }
+.frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px; }
+.rad { border-top: 1px solid currentColor; padding: 0 2px; }
+.chartbox { overflow-x: auto; }
+svg text { font-family: var(--body); fill: var(--muted); font-size: 12px; }
+svg .ptext { fill: var(--ink); font-weight: 600; }
+.note { font-size: .9rem; color: var(--muted); margin: 0; }
+.tally { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: end; font-variant-numeric: tabular-nums; }
+.tally .big { font-family: var(--display); font-size: 2.1rem; font-weight: 700; line-height: 1; }
+.tally .big.hit { color: var(--hit); }
+.tally .big.miss { color: var(--miss); }
+.qs { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 70ch; }
+.oneline { margin: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="label">MthStat 215 · Understanding confidence</div>
+    <h1>Confidence Interval Capture</h1>
+    <p>Draw one sample, build a confidence interval from it, then draw many more samples and see how often the method captures the true population proportion <i>p</i>.</p>
+  </header>
+
+  <section class="part" aria-labelledby="h0">
+    <h2 id="h0">Set the population</h2>
+    <div class="settings">
+      <div class="field">
+        <label class="label" for="ctx">Context</label>
+        <select id="ctx">
+          <option value="ft">Free throws (80% shooter)</option>
+          <option value="reeses">Reese's Pieces (orange)</option>
+          <option value="lefty">Left-handed people</option>
+          <option value="custom">Custom p and n</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="label" for="pIn">True proportion <i>p</i></label>
+        <input id="pIn" type="number" min="0.01" max="0.99" step="0.01" value="0.80">
+      </div>
+      <div class="field">
+        <label class="label" for="nIn">Sample size <i>n</i></label>
+        <input id="nIn" type="number" min="5" max="2000" step="1" value="100">
+      </div>
+      <div class="field">
+        <label class="label" for="cIn">Confidence level <i>c</i></label>
+        <select id="cIn">
+          <option value="0.90">90%</option>
+          <option value="0.95" selected>95%</option>
+          <option value="0.98">98%</option>
+          <option value="0.99">99%</option>
+        </select>
+      </div>
+    </div>
+    <p class="src" id="ctxNote"></p>
+  </section>
+
+  <section class="part" aria-labelledby="h1">
+    <h2 id="h1"><span class="num">Part 1</span> Your sample</h2>
+    <p id="sampleIntro"></p>
+    <div class="row"><button id="drawMine" type="button">Draw a new sample</button></div>
+    <div class="grid" id="grid" aria-label="Your sample"></div>
+    <div class="legend" id="legend"></div>
+    <div class="stats">
+      <div class="stat"><span class="label" id="xLabel">Successes x</span><b id="xOut">–</b></div>
+      <div class="stat"><span class="label">Sample size n</span><b id="nOut">–</b></div>
+      <div class="stat"><span class="label">Sample proportion p̂</span><b id="phatOut">–</b></div>
+    </div>
+  </section>
+
+  <section class="part" aria-labelledby="h2">
+    <h2 id="h2"><span class="num">Part 2</span> Build your confidence interval</h2>
+    <p>Work each step by hand with your own sample, then reveal it to check your work. In real life we never get to see <i>p</i>, so this interval is all we would have.</p>
+    <div class="row"><button class="ghost" id="revealAll" type="button">Reveal all steps</button><button class="ghost" id="hideAll" type="button">Hide all steps</button></div>
+    <div class="steps" id="steps"></div>
+  </section>
+
+  <section class="part" aria-labelledby="h3">
+    <h2 id="h3"><span class="num">Part 3</span> Many samples, many intervals</h2>
+    <p>Each new sample comes from the same population and gets its own <span id="cTxt">95%</span> confidence interval. The solid line marks the true <i>p</i>. Your interval from Part 1 is the gold one at the top.</p>
+    <div class="row">
+      <button id="add1" type="button">+ 1 sample</button>
+      <button id="add10" type="button">+ 10 samples</button>
+      <button id="add100" type="button">+ 100 samples</button>
+      <button class="ghost" id="clearMany" type="button">Clear</button>
+    </div>
+    <div class="tally" aria-live="polite">
+      <div><div class="label">Intervals</div><div class="big" id="tTotal">1</div></div>
+      <div><div class="label">Captured p</div><div class="big hit" id="tHit">–</div></div>
+      <div><div class="label">Missed p</div><div class="big miss" id="tMiss">–</div></div>
+      <div><div class="label">Percent captured</div><div class="big" id="tPct">–</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--hit)"></span>captures p</span>
+      <span><span class="sw" style="background:var(--miss)"></span>misses p</span>
+      <span><span class="sw" style="background:var(--gold)"></span>your interval</span>
+      <span id="failLegend" hidden><span class="sw" style="background:transparent;border:1.5px dashed var(--fail)"></span>dashed: conditions not met (np̂ or n(1−p̂) &lt; 10)</span>
+    </div>
+    <div class="chartbox"><svg id="chart" role="img" aria-label="Confidence intervals compared with the true proportion"></svg></div>
+    <p class="note" id="chartNote"></p>
+    <div>
+      <div class="label">Running percent captured</div>
+      <div class="chartbox"><svg id="run" role="img" aria-label="Running percent of intervals that captured p"></svg></div>
+    </div>
+    <p class="note">Change the confidence level above to recompute every interval from the same samples. Changing <i>p</i> or <i>n</i> starts over with a new sample.</p>
+  </section>
+
+  <section class="part" aria-labelledby="h4">
+    <h2 id="h4">What do you notice?</h2>
+    <ol class="qs">
+      <li>Did your interval from Part 1 capture <i>p</i>? Could you have known that without seeing the solid line?</li>
+      <li>Look at the intervals that miss. Where are their sample proportions p̂ compared with <i>p</i>?</li>
+      <li>After 100 or more intervals, how close is the percent captured to the confidence level? Why isn't it exactly equal?</li>
+      <li>Switch from 95% to 90%, then to 99%. What happens to the widths of the intervals and to the percent captured?</li>
+      <li>Try left-handed students with <i>n</i> = 30. What happens to the percent captured, and which intervals are dashed?</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var CTX = {
+    ft: { p: 0.80, n: 100, unit: "shots", succ: "made", fail: "missed", xLabel: "Shots made x",
+          param: "free throws this shooter makes",
+          intro: "Simulate one 100-shot session for a true 80% free-throw shooter (like Dr. Murphy claims to be).",
+          note: "An 80% shooter makes each free throw with probability 0.80, independently of the other shots." },
+    reeses: { p: 0.40, n: 50, unit: "candies", succ: "orange", fail: "brown or yellow", xLabel: "Orange candies x",
+          param: "Reese's Pieces that are orange",
+          intro: "Scoop one random sample of Reese's Pieces and count the orange ones.",
+          note: "The Hershey Company does not publish the color mix of Reese's Pieces; 40% orange is our class estimate from Lesson 9." },
+    lefty: { p: 0.106, n: 300, unit: "students", succ: "left-handed", fail: "right-handed", xLabel: "Left-handed x",
+          param: "people who are left-handed",
+          intro: "Fill a lecture hall with a random sample of students and count the left-handers.",
+          note: "About 10.6% of people are left-handed (Papadatou-Pastou et al., 2020, Psychological Bulletin, 146(6), 481–524)." },
+    custom: { p: 0.50, n: 100, unit: "trials", succ: "success", fail: "failure", xLabel: "Successes x",
+          param: "successes in the population",
+          intro: "Draw one random sample from a population with the proportion of successes you chose.",
+          note: "Set any true proportion p and sample size n." }
+  };
+  var ZC = { "0.90": 1.645, "0.95": 1.96, "0.98": 2.33, "0.99": 2.575 };
+  var MAXROWS = 200;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { ctx: "ft", p: 0.8, n: 100, c: "0.95", mine: null, phats: [], open: {} };
+
+  function f(v, d) { return (Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d); }
+  function pct(v) { return (v * 100).toFixed(1).replace(/\.0$/, "") + "%"; }
+
+  function sample(n, p) {
+    var arr = new Uint8Array(n), x = 0;
+    for (var i = 0; i < n; i++) { if (Math.random() < p) { arr[i] = 1; x++; } }
+    return { arr: arr, x: x };
+  }
+  function interval(phat, n) {
+    var z = ZC[state.c], se = Math.sqrt(phat * (1 - phat) / n), E = z * se;
+    return { lo: phat - E, hi: phat + E, se: se, E: E, z: z,
+             ok: n * phat >= 10 && n * (1 - phat) >= 10, hit: phat - E <= state.p && state.p <= phat + E };
+  }
+
+  // ---------- settings ----------
+  function applyCtx(key) {
+    var c = CTX[key]; state.ctx = key;
+    $("pIn").value = c.p; $("nIn").value = c.n;
+    readSettings(true);
+  }
+  function readSettings(reset) {
+    var p = parseFloat($("pIn").value), n = parseInt($("nIn").value, 10);
+    if (!(p > 0 && p < 1)) p = state.p;
+    if (!(n >= 5 && n <= 2000)) n = state.n;
+    var changed = p !== state.p || n !== state.n;
+    state.p = p; state.n = n; state.c = $("cIn").value;
+    $("ctxNote").textContent = CTX[state.ctx].note;
+    $("sampleIntro").textContent = CTX[state.ctx].intro;
+    $("xLabel").textContent = CTX[state.ctx].xLabel;
+    $("cTxt").textContent = Math.round(parseFloat(state.c) * 100) + "%";
+    if (reset || changed) { drawMine(); } else { renderSteps(); renderChart(); }
+  }
+
+  // ---------- part 1 ----------
+  function drawMine() {
+    var s = sample(state.n, state.p);
+    state.mine = { x: s.x, phat: s.x / state.n, arr: s.arr };
+    state.phats = [state.mine.phat];
+    renderGrid(); renderSteps(); renderChart();
+  }
+  function renderGrid() {
+    var g = $("grid"), n = state.n, cell = n <= 100 ? 14 : n <= 300 ? 10 : n <= 800 ? 7 : 5;
+    g.style.setProperty("--cell", cell + "px");
+    g.style.gap = (n <= 300 ? 3 : 2) + "px";
+    var html = "";
+    for (var i = 0; i < n; i++) html += state.mine.arr[i] ? '<i class="s"></i>' : "<i></i>";
+    g.innerHTML = html;
+    var c = CTX[state.ctx];
+    $("legend").innerHTML = '<span><span class="sw" style="background:var(--gold)"></span>' + c.succ +
+      '</span><span><span class="sw" style="background:var(--soft);border:1px solid var(--rule)"></span>' + c.fail + "</span>";
+    $("xOut").textContent = state.mine.x;
+    $("nOut").textContent = n;
+    $("phatOut").textContent = f(state.mine.phat, 3);
+  }
+
+  // ---------- part 2 ----------
+  function sq(inner) { return '√<span class="rad">' + inner + "</span>"; }
+  function fr(a, b) { return '<span class="frac"><span>' + a + "</span><span>" + b + "</span></span>"; }
+  function renderSteps() {
+    var m = state.mine; if (!m) return;
+    var n = state.n, ph = m.phat, ci = interval(ph, n), cP = Math.round(parseFloat(state.c) * 100), c = CTX[state.ctx];
+    var lo = f(Math.max(ci.lo, 0), 3), hi = f(Math.min(ci.hi, 1), 3);
+    var steps = [
+      ["1. Parameter and confidence level",
+        "<p><i>p</i> = the true proportion of " + c.param + ".</p><p>Confidence level <i>c</i> = " + cP + "%. No hypotheses: we are estimating <i>p</i>, not testing a claim.</p><p>Observed sample proportion p̂ = " + m.x + "/" + n + " = " + f(ph, 4) + "</p>"],
+      ["2. Check the A&amp;C (use p̂)",
+        "<p>Random: each " + c.unit.replace(/s$/, "") + " is a random, independent trial.</p>" +
+        "<p><i>n</i>p̂ = " + n + "(" + f(ph, 3) + ") = " + f(n * ph, 1) + (n * ph >= 10 ? ' <span class="ok">≥ 10 ✓</span>' : ' <span class="bad">&lt; 10 ✗</span>') + "</p>" +
+        "<p><i>n</i>(1 − p̂) = " + n + "(" + f(1 - ph, 3) + ") = " + f(n * (1 - ph), 1) + (n * (1 - ph) >= 10 ? ' <span class="ok">≥ 10 ✓</span>' : ' <span class="bad">&lt; 10 ✗</span>') + "</p>" +
+        (ci.ok ? "" : '<p class="bad">A condition fails, so the Normal model (and this interval) may not be trustworthy.</p>')],
+      ["3. Point estimate and standard error",
+        "<p>p̂ = " + fr("x", "n") + " = " + fr(m.x, n) + " = <span class=\"hl\">" + f(ph, 4) + "</span></p>" +
+        "<p>s<sub>p̂</sub> = " + sq(fr("p̂(1 − p̂)", "n")) + " = " + sq(fr(f(ph, 4) + "(" + f(1 - ph, 4) + ")", n)) + " = <span class=\"hl\">" + f(ci.se, 4) + "</span></p>"],
+      ["4. Confidence coefficient z<sub>c</sub>",
+        "<p>Middle area " + f(parseFloat(state.c), 2) + ", so each tail has " + f((1 - parseFloat(state.c)) / 2, 3).replace(/0+$/, "") +
+        ". Look up area " + f((1 + parseFloat(state.c)) / 2, 3).replace(/0+$/, "") + " in the Z-table: z<sub>c</sub> = <span class=\"hl\">" + ci.z + "</span></p>"],
+      ["5. Margin of error and interval",
+        "<p>ME = z<sub>c</sub> · s<sub>p̂</sub> = " + ci.z + "(" + f(ci.se, 4) + ") = <span class=\"hl\">" + f(ci.E, 4) + "</span></p>" +
+        "<p>p̂ ± ME = " + f(ph, 4) + " ± " + f(ci.E, 4) + " → <span class=\"hl\">" + lo + " &lt; <i>p</i> &lt; " + hi + "</span></p>"],
+      ["6. Interpret in context",
+        "<p><i>We are " + cP + "% confident that the true proportion of " + c.param + " is between " + lo + " and " + hi + ".</i></p>"]
+    ];
+    var html = "";
+    steps.forEach(function (s, i) {
+      var open = !!state.open[i];
+      html += '<div class="step"><div class="top"><strong>' + s[0] + '</strong><button type="button" class="ghost" data-i="' + i + '" aria-expanded="' + open + '">' +
+        (open ? "Hide" : "Show") + '</button></div><div class="ans"' + (open ? "" : " hidden") + ">" + s[1] + "</div></div>";
+    });
+    $("steps").innerHTML = html;
+  }
+  $("steps").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-i]"); if (!b) return;
+    var i = +b.getAttribute("data-i"); state.open[i] = !state.open[i]; renderSteps();
+  });
+  $("revealAll").addEventListener("click", function () { for (var i = 0; i < 6; i++) state.open[i] = true; renderSteps(); });
+  $("hideAll").addEventListener("click", function () { state.open = {}; renderSteps(); });
+
+  // ---------- part 3 ----------
+  function addMany(k) {
+    var step = k >= 100 ? 10 : 1, done = 0;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function tick() {
+      var m = Math.min(step, k - done);
+      for (var j = 0; j < m; j++) state.phats.push(sample(state.n, state.p).x / state.n);
+      done += m; renderChart();
+      if (done < k) { if (reduce) tick(); else requestAnimationFrame(tick); }
+    }
+    if (k === 1) { state.phats.push(sample(state.n, state.p).x / state.n); renderChart(); } else tick();
+  }
+  $("add1").addEventListener("click", function () { addMany(1); });
+  $("add10").addEventListener("click", function () { addMany(10); });
+  $("add100").addEventListener("click", function () { addMany(100); });
+  $("clearMany").addEventListener("click", function () { state.phats = [state.mine.phat]; renderChart(); });
+
+  function niceStep(span) {
+    var raw = span / 6, mag = Math.pow(10, Math.floor(Math.log10(raw))), r = raw / mag;
+    return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag;
+  }
+  function renderChart() {
+    var svg = $("chart"), all = state.phats, total = all.length;
+    var ints = all.map(function (ph) { return interval(ph, state.n); });
+    var hits = ints.filter(function (c) { return c.hit; }).length;
+    $("tTotal").textContent = total;
+    $("tHit").textContent = hits;
+    $("tMiss").textContent = total - hits;
+    $("tPct").textContent = pct(hits / total);
+    $("failLegend").hidden = !ints.some(function (c) { return !c.ok; });
+
+    // rows: yours pinned first, then the most recent others
+    var rows = [0];
+    var start = Math.max(1, total - (MAXROWS - 1));
+    for (var i = total - 1; i >= start; i--) rows.push(i);
+    $("chartNote").textContent = total > MAXROWS
+      ? "Showing your interval and the most recent " + (MAXROWS - 1) + " of " + total + " intervals. The tally counts all of them."
+      : "Newest intervals appear just below yours.";
+
+    var W = Math.max(svg.parentNode.clientWidth, 300), padL = 14, padR = 14, padT = 30, padB = 34;
+    var rowH = rows.length <= 12 ? 18 : Math.max(2, Math.min(18, 460 / rows.length));
+    var H = padT + rows.length * rowH + padB;
+    var sd = Math.sqrt(state.p * (1 - state.p) / state.n);
+    var lo = Math.max(0, state.p - 5 * sd), hi = Math.min(1, state.p + 5 * sd);
+    ints.forEach(function (c) { lo = Math.min(lo, Math.max(0, c.lo)); hi = Math.max(hi, Math.min(1, c.hi)); });
+    var x = function (v) { return padL + (v - lo) / (hi - lo) * (W - padL - padR); };
+    var out = [];
+    var st = niceStep(hi - lo), t0 = Math.ceil(lo / st) * st;
+    for (var t = t0; t <= hi + 1e-9; t += st) {
+      var xx = x(t);
+      out.push('<line x1="' + xx + '" x2="' + xx + '" y1="' + (padT - 4) + '" y2="' + (H - padB) + '" stroke="var(--rule)" stroke-width="1"/>');
+      out.push('<text x="' + xx + '" y="' + (H - padB + 16) + '" text-anchor="middle">' + (+t.toFixed(4)) + "</text>");
+    }
+    out.push('<text x="' + (W / 2) + '" y="' + (H - 4) + '" text-anchor="middle">sample proportion p̂ and its ' + Math.round(parseFloat(state.c) * 100) + '% interval</text>');
+    var thick = Math.max(1.2, Math.min(4, rowH * 0.5)), dot = Math.max(1.4, Math.min(4.5, rowH * 0.32));
+    rows.forEach(function (idx, r) {
+      var c = ints[idx], ph = all[idx], y = padT + r * rowH + rowH / 2, mine = idx === 0;
+      var col = c.hit ? "var(--hit)" : "var(--miss)";
+      if (mine) out.push('<rect x="0" y="' + (padT + r * rowH) + '" width="' + W + '" height="' + rowH + '" fill="var(--gold-soft)"/>');
+      out.push('<line x1="' + x(Math.max(lo, c.lo)) + '" x2="' + x(Math.min(hi, c.hi)) + '" y1="' + y + '" y2="' + y + '" stroke="' + (mine ? "var(--gold)" : col) +
+        '" stroke-width="' + (mine ? Math.max(thick, 3) : thick) + '"' + (c.ok ? "" : ' stroke-dasharray="4 3"') + ' stroke-linecap="butt"/>');
+      out.push('<circle cx="' + x(ph) + '" cy="' + y + '" r="' + (mine ? Math.max(dot, 3.5) : dot) + '" fill="' + (mine ? (c.hit ? "var(--hit)" : "var(--miss)") : col) + '"/>');
+    });
+    var xp = x(state.p);
+    out.push('<line x1="' + xp + '" x2="' + xp + '" y1="' + (padT - 8) + '" y2="' + (H - padB) + '" stroke="var(--ink)" stroke-width="2.2"/>');
+    var anchor = xp > W - 90 ? "end" : xp < 90 ? "start" : "middle";
+    out.push('<text class="ptext" x="' + xp + '" y="' + (padT - 13) + '" text-anchor="' + anchor + '">true p = ' + state.p + "</text>");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    svg.innerHTML = out.join("");
+    renderRun(ints);
+  }
+
+  function renderRun(ints) {
+    var svg = $("run"), W = Math.max(svg.parentNode.clientWidth, 300), H = 150, pl = 40, pr = 12, pt = 10, pb = 28;
+    var N = ints.length, hits = 0, pts = [];
+    ints.forEach(function (c, i) { if (c.hit) hits++; pts.push([i + 1, hits / (i + 1)]); });
+    var xmax = Math.max(N, 10);
+    var x = function (v) { return pl + (v - 1) / Math.max(xmax - 1, 1) * (W - pl - pr); };
+    var y = function (v) { return pt + (1 - (v - 0.5) / 0.5) * (H - pt - pb); };
+    var o = [], c = parseFloat(state.c);
+    [0.5, 0.6, 0.7, 0.8, 0.9, 1].forEach(function (v) {
+      o.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--rule)"/>');
+      o.push('<text x="' + (pl - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + Math.round(v * 100) + "%</text>");
+    });
+    o.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(c) + '" y2="' + y(c) + '" stroke="var(--gold)" stroke-width="2" stroke-dasharray="6 4"/>');
+    o.push('<text x="' + (W - pr) + '" y="' + (y(c) - 5) + '" text-anchor="end" class="ptext">confidence level ' + Math.round(c * 100) + "%</text>");
+    if (N > 0) {
+      var d = pts.map(function (p, i) { return (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(Math.max(0.5, p[1])).toFixed(1); }).join(" ");
+      o.push('<path d="' + d + '" fill="none" stroke="var(--hit)" stroke-width="2"/>');
+      var last = pts[N - 1];
+      o.push('<circle cx="' + x(last[0]) + '" cy="' + y(Math.max(0.5, last[1])) + '" r="3.5" fill="var(--hit)"/>');
+    }
+    o.push('<text x="' + ((pl + W - pr) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">number of intervals (1 to ' + xmax + ")</text>");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    svg.innerHTML = o.join("");
+  }
+
+  // ---------- wiring ----------
+  $("ctx").addEventListener("change", function () { applyCtx(this.value); });
+  $("pIn").addEventListener("change", function () { readSettings(false); });
+  $("nIn").addEventListener("change", function () { readSettings(false); });
+  $("cIn").addEventListener("change", function () { readSettings(false); });
+  $("drawMine").addEventListener("click", drawMine);
+  var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(renderChart, 120); });
+  applyCtx("ft");
+})();
+</script>
+</body>
+</html>
