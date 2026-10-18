@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>t vs. Normal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+
+/* Layout: one narrow working column; population card, then numbered parts (one sample, many samples, compare n) */
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #1d2430;
+  --muted: #5b6575;
+  --rule: #d9dee6;
+  --soft: #eef1f5;
+  --hit: #3c78d8;
+  --miss: #d1495b;
+  --gold: #f1c232;
+  --gold-soft: #fdf3cf;
+  --gold-ink: #6b5200;
+  --fail: #9aa3b2;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --panel: #1a2029; --ink: #e8ecf2; --muted: #a2acbb; --rule: #2e3643; --soft: #222a35;
+    --hit: #78a6f0; --miss: #f07a8a; --gold: #f1c232; --gold-soft: #3a3214; --gold-ink: #f6d877; --fail: #6c7686;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1a2029; --ink: #e8ecf2; --muted: #a2acbb; --rule: #2e3643; --soft: #222a35;
+  --hit: #78a6f0; --miss: #f07a8a; --gold: #f1c232; --gold-soft: #3a3214; --gold-ink: #f6d877; --fail: #6c7686;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1rem; line-height: 1.45; }
+.wrap { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 18px; }
+header h1 { font-family: var(--display); font-weight: 700; font-size: clamp(1.9rem, 5vw, 2.6rem); line-height: 1.05; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 65ch; }
+.label { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .82rem; color: var(--muted); }
+section.part { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.part h2 { font-family: var(--display); font-weight: 700; font-size: 1.45rem; margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.part h2 .num { font-size: .95rem; color: var(--gold-ink); background: var(--gold-soft); border: 1px solid var(--gold); border-radius: 999px; padding: 0 9px; }
+.part > p { margin: 0; max-width: 70ch; }
+.settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+select, input[type=number] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; width: 100%; }
+select:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.src { font-size: .85rem; color: var(--muted); margin: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font-family: var(--display); font-weight: 600; font-size: 1.02rem; letter-spacing: .03em; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--ink); background: var(--ink); color: var(--panel); }
+button.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+button:hover { filter: brightness(1.12); }
+button.ghost:hover { background: var(--soft); filter: none; }
+.grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.grid i { width: var(--cell, 12px); height: var(--cell, 12px); border-radius: 2px; background: var(--soft); border: 1px solid var(--rule); display: block; }
+.grid i.s { background: var(--gold); border-color: var(--gold); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .9rem; color: var(--muted); align-items: center; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px 28px; font-variant-numeric: tabular-nums; }
+.stat b { display: block; font-family: var(--display); font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.steps { display: grid; gap: 8px; }
+.step { border: 1px solid var(--rule); border-left: 4px solid var(--gold); border-radius: 6px; padding: 10px 12px; background: var(--soft); display: grid; gap: 6px; min-width: 0; }
+.step .top { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.step .top strong { font-family: var(--display); font-size: 1.12rem; font-weight: 600; }
+.step .ans { font-variant-numeric: tabular-nums; overflow-x: auto; }
+.step .ans p { margin: 2px 0; }
+.step button { font-size: .9rem; padding: 4px 10px; }
+.hl { background: var(--gold-soft); border-bottom: 2px solid var(--gold); padding: 0 3px; font-weight: 600; white-space: nowrap; }
+.ok { color: var(--hit); font-weight: 600; }
+.bad { color: var(--miss); font-weight: 600; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .92em; line-height: 1.15; margin: 0 2px; }
+.frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px; }
+.rad { border-top: 1px solid currentColor; padding: 0 2px; display: inline-block; line-height: 1.2; }
+.rad .frac > span:first-child { padding-top: .35em; }
+.chartbox { overflow-x: auto; }
+svg text { font-family: var(--body); fill: var(--muted); font-size: 12px; }
+svg .ptext { fill: var(--ink); font-weight: 600; }
+.note { font-size: .9rem; color: var(--muted); margin: 0; }
+.tally { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: end; font-variant-numeric: tabular-nums; }
+.tally .big { font-family: var(--display); font-size: 2.1rem; font-weight: 700; line-height: 1; }
+.tally .big.hit { color: var(--hit); }
+.tally .big.miss { color: var(--miss); }
+.qs { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 70ch; }
+.oneline { margin: 0; }
+.ph { position: relative; display: inline-block; font-style: italic; text-transform: none; line-height: 1; padding-right: .04em; }
+.ph::before { content: "\02C6"; position: absolute; left: 50%; top: -.26em; transform: translateX(-42%); font-style: normal; font-size: .95em; line-height: 1; }
+sub .ph::before { top: -.24em; }
+.zsvg { display: block; width: 100%; max-width: 380px; height: auto; margin-top: 6px; }
+.mini { overflow-x: auto; }
+.mini table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .95rem; min-width: 100%; }
+.mini th { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .8rem; color: var(--muted); text-align: right; padding: 6px 10px; border-bottom: 2px solid var(--ink); background: var(--gold-soft); white-space: nowrap; }
+.mini td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.mini th:first-child, .mini td:first-child { text-align: left; }
+[hidden] { display: none !important; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: .95rem; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--hit); }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.seg button[aria-pressed="false"] { background: transparent; color: var(--ink); border-color: var(--rule); }
+.slider { display: grid; gap: 4px; }
+.slider .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.slider .val { font-family: var(--display); font-weight: 700; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--hit); height: 28px; }
+.ln { display: inline-block; width: 22px; height: 0; border-top: 3px solid var(--hit); vertical-align: 4px; margin-right: 6px; }
+.ln.z { border-top: 2.5px dashed var(--ink); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.card { border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; background: var(--panel); display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
+.card.t { border-left: 4px solid var(--hit); }
+.card.z { border-left: 4px solid var(--ink); }
+.card b.big { font-family: var(--display); font-size: 1.7rem; line-height: 1.1; }
+.card p { margin: 0; }
+.card .sw2 { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+.verdict { border: 1px solid var(--gold); background: var(--gold-soft); border-radius: 8px; padding: 8px 12px; font-size: .98rem; }
+.qs li { margin-bottom: 8px; }
+.qs li > span { display: block; margin-bottom: 4px; }
+.qs .ans { background: var(--soft); border-left: 3px solid var(--hit); border-radius: 4px; padding: 6px 10px; font-size: .95rem; margin-top: 6px; }
+.qs button { font-size: .85rem; padding: 3px 10px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="label">MthStat 215 · t-distributions</div>
+    <h1>Student's <i>t</i> vs. the Standard Normal</h1>
+    <p>Change the degrees of freedom and watch the <i>t</i> curve approach the standard Normal (<i>z</i>) curve. Shade tail areas or find critical values, and compare the <i>t</i> answer with the <i>z</i> answer.</p>
+  </header>
+
+  <section class="part" aria-labelledby="h1">
+    <h2 id="h1">The curves</h2>
+    <div class="slider">
+      <div class="top"><label class="label" for="df">Degrees of freedom</label><span class="val">df = <span id="dfv">4</span></span></div>
+      <input type="range" id="df" min="0" max="35" step="1" value="3" aria-describedby="dfnote">
+      <p class="src" id="dfnote">The slider steps through the rows of our t-table: df = 1 to 30, then 40, 60, 80, 100 and 1000.</p>
+    </div>
+    <div class="row">
+      <label class="toggle" for="norm"><input type="checkbox" id="norm" checked><span>Show the standard Normal (z) curve</span></label>
+    </div>
+
+    <div>
+      <div class="label" style="margin-bottom:4px">Shade</div>
+      <div class="seg" id="mode" role="group" aria-label="What to shade">
+        <button type="button" data-m="none" aria-pressed="false">Nothing</button>
+        <button type="button" data-m="upper" aria-pressed="false">Upper tail</button>
+        <button type="button" data-m="lower" aria-pressed="false">Lower tail</button>
+        <button type="button" data-m="two" aria-pressed="true">Two tails</button>
+        <button type="button" data-m="mid" aria-pressed="false">Middle (confidence)</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="label" style="margin-bottom:4px">Set the cutoff by</div>
+      <div class="seg" id="by" role="group" aria-label="Set the cutoff by">
+        <button type="button" data-b="t" aria-pressed="true">a t-value</button>
+        <button type="button" data-b="c" aria-pressed="false">a confidence level / area</button>
+      </div>
+    </div>
+    <div class="slider" id="tbox">
+      <div class="top"><label class="label" for="tv">Cutoff t</label><span class="val" id="tvv">2.00</span></div>
+      <input type="range" id="tv" min="0" max="5" step="0.01" value="2">
+    </div>
+    <div id="cbox" hidden>
+      <div class="seg" id="conf" role="group" aria-label="Confidence level"></div>
+    </div>
+
+    <div class="legend">
+      <span><span class="ln"></span>t-distribution, df = <b id="dfl">4</b></span>
+      <span id="zleg"><span class="ln z"></span>standard Normal (z)</span>
+      <span id="shleg"><span class="sw" style="background:var(--hit);opacity:.45"></span>area under t &nbsp;<span class="sw" id="zsw" style="background:var(--ink);opacity:.25"></span><span id="zswl">area under z</span></span>
+    </div>
+    <div class="chartbox"><svg id="plot" role="img" aria-label="t and standard Normal density curves"></svg></div>
+    <div class="cards" id="cards"></div>
+    <div class="verdict" id="note"></div>
+  </section>
+
+  <section class="part" aria-labelledby="h2">
+    <h2 id="h2">What do you notice?</h2>
+    <div class="row"><button id="revealAll" type="button" class="ghost">Show all answers</button><button id="hideAll" type="button" class="ghost">Hide all answers</button></div>
+    <ol class="qs" id="qs"></ol>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var DFS = []; for (var i = 1; i <= 30; i++) DFS.push(i); DFS = DFS.concat([40, 60, 80, 100, 1000]);
+  var CONFS = [0.80, 0.90, 0.95, 0.98, 0.99, 0.998, 0.999];
+  var st = { df: 4, mode: "two", by: "t", t: 2, conf: 0.95 };
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------- math ----------
+  function lgamma(x) {
+    var c = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    var y = x, tmp = x + 5.5; tmp -= (x + 0.5) * Math.log(tmp);
+    var ser = 1.000000000190015; for (var j = 0; j < 6; j++) ser += c[j] / ++y;
+    return -tmp + Math.log(2.5066282746310005 * ser / x);
+  }
+  function betacf(a, b, x) {
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < 1e-300) d = 1e-300; d = 1 / d; var h = d;
+    for (var m = 1; m <= 300; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < 1e-300) d = 1e-300; c = 1 + aa / c; if (Math.abs(c) < 1e-300) c = 1e-300; d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < 1e-300) d = 1e-300; c = 1 + aa / c; if (Math.abs(c) < 1e-300) c = 1e-300; d = 1 / d;
+      var del = d * c; h *= del; if (Math.abs(del - 1) < 1e-12) break;
+    }
+    return h;
+  }
+  function ibeta(a, b, x) {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
+  }
+  function tupper(t, v) { var x = v / (v + t * t), p = 0.5 * ibeta(v / 2, 0.5, x); return t >= 0 ? p : 1 - p; }
+  function tpdf(t, v) { return Math.exp(lgamma((v + 1) / 2) - lgamma(v / 2)) / Math.sqrt(v * Math.PI) * Math.pow(1 + t * t / v, -(v + 1) / 2); }
+  function zpdf(z) { return Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI); }
+  function erfc(x) { var z = Math.abs(x), t = 1 / (1 + z / 2), r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277))))))))); return x >= 0 ? r : 2 - r; }
+  function zupper(z) { return 0.5 * erfc(z / Math.SQRT2); }
+  function inv(fn, p) { var lo = 0, hi = 700; for (var k = 0; k < 200; k++) { var m = (lo + hi) / 2; if (fn(m) > p) lo = m; else hi = m; } return (lo + hi) / 2; }
+  function tq(p, v) { return inv(function (t) { return tupper(t, v); }, p); } // upper-tail p
+  function zq(p) { return inv(zupper, p); }
+
+  // ---------- controls ----------
+  $("conf").innerHTML = CONFS.map(function (c) { return '<button type="button" data-c="' + c + '" aria-pressed="' + (c === st.conf) + '">' + (+(c * 100).toFixed(1)) + "%</button>"; }).join("");
+  function press(group, attr, val) { [].forEach.call($(group).querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute(attr) === String(val))); }); }
+  $("df").addEventListener("input", function () { st.df = DFS[+this.value]; render(); });
+  $("norm").addEventListener("change", render);
+  $("tv").addEventListener("input", function () { st.t = +this.value; render(); });
+  $("mode").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; st.mode = b.getAttribute("data-m"); press("mode", "data-m", st.mode); render(); });
+  $("by").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; st.by = b.getAttribute("data-b"); press("by", "data-b", st.by); render(); });
+  $("conf").addEventListener("click", function (e) { var b = e.target.closest("button"); if (!b) return; st.conf = +b.getAttribute("data-c"); press("conf", "data-c", st.conf); render(); });
+
+  function f(x, d) { return x.toFixed(d); }
+  function fa(p) { if (p < 0.0001) return p < 1e-6 ? "< 0.000001" : p.toExponential(2); return p.toFixed(4); }
+
+  // area for a cutoff c (>=0) under a given upper-tail function
+  function area(up, c) {
+    switch (st.mode) {
+      case "upper": return up(c);
+      case "lower": return up(c);         // lower tail beyond -c (symmetric)
+      case "two": return 2 * up(c);
+      case "mid": return 1 - 2 * up(c);
+      default: return NaN;
+    }
+  }
+  function areaName() { return { upper: "upper-tail area", lower: "lower-tail area", two: "two-tails area", mid: "middle area" }[st.mode]; }
+  // cutoff from a target confidence level / area (by = c)
+  function tailFromConf() { var two = 1 - st.conf; return st.mode === "upper" || st.mode === "lower" ? two / 2 : two / 2; }
+
+  function render() {
+    var v = st.df, showZ = $("norm").checked;
+    $("dfv").textContent = v; $("dfl").textContent = v; $("zleg").style.display = showZ ? "" : "none";
+    $("tbox").hidden = st.by !== "t"; $("cbox").hidden = st.by !== "c";
+    $("by").parentNode.style.display = st.mode === "none" ? "none" : "";
+    if (st.mode === "none") { $("tbox").hidden = true; $("cbox").hidden = true; }
+
+    var ct, cz, onetail = tailFromConf();
+    if (st.by === "c") { ct = tq(onetail, v); cz = zq(onetail); } else { ct = st.t; cz = st.t; }
+    $("tvv").textContent = f(st.t, 2);
+
+    // ---- plot ----
+    var svg = $("plot"), w = Math.max(svg.parentNode.clientWidth, 300), H = Math.round(Math.min(360, Math.max(240, w * 0.45)));
+    var pl = 14, pr = 14, pt = 26, pb = 34, lo = -5, hi = 5, ymax = 0.42;
+    var x = function (u) { return pl + (u - lo) / (hi - lo) * (w - pl - pr); };
+    var y = function (d) { return H - pb - d / ymax * (H - pt - pb); };
+    var o = [];
+    function path(fn, a, b) { var s = [], n = 240; for (var k = 0; k <= n; k++) { var u = a + (b - a) * k / n; s.push(x(u).toFixed(1) + "," + y(fn(u)).toFixed(1)); } return s; }
+    function shade(fn, a, b, color, op) { if (b <= a) return; var s = path(fn, a, b); o.push('<polygon points="' + x(a).toFixed(1) + "," + y(0) + " " + s.join(" ") + " " + x(b).toFixed(1) + "," + y(0) + '" fill="' + color + '" fill-opacity="' + op + '"/>'); }
+    var tf = function (u) { return tpdf(u, v); };
+    function regions(c) {
+      var cc = Math.min(c, 5);
+      if (st.mode === "upper") return [[cc, 5]];
+      if (st.mode === "lower") return [[-5, -cc]];
+      if (st.mode === "two") return [[-5, -cc], [cc, 5]];
+      if (st.mode === "mid") return [[-cc, cc]];
+      return [];
+    }
+    if (showZ) regions(cz).forEach(function (r) { shade(zpdf, r[0], r[1], "var(--ink)", 0.18); });
+    regions(ct).forEach(function (r) { shade(tf, r[0], r[1], "var(--hit)", 0.35); });
+    // gridlines/axis
+    o.push('<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="var(--ink)"/>');
+    for (var tk = -5; tk <= 5; tk++) { o.push('<line x1="' + x(tk) + '" x2="' + x(tk) + '" y1="' + y(0) + '" y2="' + (y(0) + 4) + '" stroke="var(--ink)"/><text x="' + x(tk) + '" y="' + (y(0) + 18) + '" text-anchor="middle">' + tk + "</text>"); }
+    if (showZ) o.push('<polyline points="' + path(zpdf, lo, hi).join(" ") + '" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/>');
+    o.push('<polyline points="' + path(tf, lo, hi).join(" ") + '" fill="none" stroke="var(--hit)" stroke-width="3"/>');
+    // cutoff markers
+    if (st.mode !== "none") {
+      var marks = st.mode === "upper" ? [ct] : st.mode === "lower" ? [-ct] : [-ct, ct];
+      marks.forEach(function (m) { if (Math.abs(m) > 5) return; o.push('<line x1="' + x(m) + '" x2="' + x(m) + '" y1="' + (pt - 4) + '" y2="' + y(0) + '" stroke="var(--hit)" stroke-width="1.5"/><text class="ptext" x="' + x(m) + '" y="' + (pt - 8) + '" text-anchor="middle" fill="var(--hit)">t = ' + f(m, 3) + "</text>"); });
+      if (showZ && st.by === "c") {
+        var zm = st.mode === "upper" ? [cz] : st.mode === "lower" ? [-cz] : [-cz, cz];
+        zm.forEach(function (m) { o.push('<line x1="' + x(m) + '" x2="' + x(m) + '" y1="' + (pt + 16) + '" y2="' + y(0) + '" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/><text x="' + x(m) + '" y="' + (pt + 12) + '" text-anchor="middle">z = ' + f(m, 3) + "</text>"); });
+      }
+    }
+    o.push('<text x="' + (w - pr) + '" y="' + (H - 4) + '" text-anchor="end" style="font-size:12px" fill="var(--muted)">t (or z)</text>');
+    svg.setAttribute("viewBox", "0 0 " + w + " " + H); svg.setAttribute("width", w); svg.setAttribute("height", H); svg.innerHTML = o.join("");
+
+    // ---- readouts ----
+    var tUp = function (c) { return tupper(c, v); };
+    $("shleg").style.display = st.mode === "none" ? "none" : "";
+    $("zsw").style.display = $("zswl").style.display = showZ ? "" : "none";
+    var cards = "", note = "", pc = function (p) { return p < 0.001 ? "less than 0.1%" : (100 * p).toFixed(1) + "%"; };
+    var swT = '<span class="sw2" style="background:var(--hit);opacity:.55"></span>', swZ = '<span class="sw2" style="background:var(--ink);opacity:.3"></span>';
+    function where(c, L) {
+      return st.mode === "upper" ? "above " + L + " = " + f(c, 2) : st.mode === "lower" ? "below " + L + " = −" + f(c, 2) :
+        st.mode === "two" ? "beyond ±" + f(c, 2) + " (both tails together)" : "between −" + f(c, 2) + " and " + f(c, 2);
+    }
+    if (st.mode === "none") {
+      var a3 = 2 * tupper(3, v), z3 = 2 * zupper(3);
+      cards = '<div class="card t"><span class="label">' + swT + "t curve, df = " + v + "</span><p>Area beyond ±3: <b>" + fa(a3) + "</b> (" + pc(a3) + ")</p><p>Height of the peak: <b>" + f(tpdf(0, v), 3) + "</b></p></div>" +
+        (showZ ? '<div class="card z"><span class="label">' + swZ + "standard Normal curve</span><p>Area beyond ±3: <b>" + fa(z3) + "</b> (" + pc(z3) + ")</p><p>Height of the peak: <b>" + f(zpdf(0), 3) + "</b></p></div>" : "");
+      note = showZ ? "The t curve has a lower peak and more area in the tails. A value beyond ±3 is about <b>" + f(a3 / z3, 1) + " times</b> as likely under the t curve (df = " + v + ") as under the standard Normal curve." :
+        "Turn on the standard Normal curve to compare.";
+    } else if (st.by === "t") {
+      var at = area(tUp, ct), az = area(zupper, cz);
+      cards = '<div class="card t"><span class="label">' + swT + "Under the t curve, df = " + v + "</span><p>Area " + where(ct, "t") + ':</p><b class="big">' + fa(at) + "</b><p>(" + pc(at) + " of the area)</p></div>" +
+        (showZ ? '<div class="card z"><span class="label">' + swZ + "Under the standard Normal curve</span><p>Area " + where(cz, "z") + ':</p><b class="big">' + fa(az) + "</b><p>(" + pc(az) + " of the area)</p></div>" : "");
+      if (showZ) note = st.mode === "mid" ? "With the same cutoff, the middle area is <b>smaller</b> under the t curve (" + pc(at) + " vs. " + pc(az) + "), because the t curve puts more of its area in the tails." :
+        "With the same cutoff, the t curve has <b>" + f(at / az, 2) + " times</b> as much area in the shaded tail" + (st.mode === "two" ? "s" : "") + " as the standard Normal curve (" + pc(at) + " vs. " + pc(az) + "). Using z when σ is unknown would make p-values too small.";
+      else note = "Turn on the standard Normal curve to compare.";
+    } else {
+      var lvl = (+(st.conf * 100).toFixed(1)) + "%", one = (1 - st.conf) / 2, two = 1 - st.conf;
+      var target = st.mode === "upper" ? "an upper-tail area of " + +one.toFixed(4) : st.mode === "lower" ? "a lower-tail area of " + +one.toFixed(4) :
+        st.mode === "two" ? "a total area of " + +two.toFixed(4) + " in the two tails" : "the middle " + lvl + " of the area";
+      cards = '<div class="card t"><span class="label">' + swT + "t curve, df = " + v + "</span><p>To get " + target + ", the cutoff is</p><b class=\"big\">t<sub>c</sub> = " + f(ct, 3) + "</b><p>t-table: row " + v + ", confidence level " + lvl + "</p></div>" +
+        (showZ ? '<div class="card z"><span class="label">' + swZ + "Standard Normal curve</span><p>To get " + target + ', the cutoff is</p><b class="big">z<sub>c</sub> = ' + f(cz, 3) + "</b><p>t-table: z row, confidence level " + lvl + "</p></div>" : "");
+      note = showZ ? "To capture the same area, the t curve needs a cutoff <b>" + f(ct - cz, 3) + " farther from 0</b> than the standard Normal curve. That is why t-intervals are wider than z-intervals. The gap shrinks as df grows." :
+        "Turn on the standard Normal curve to compare.";
+    }
+    $("cards").innerHTML = cards; $("note").innerHTML = note;
+  }
+
+  // ---------- questions ----------
+  var QS = [
+    ["Start at df = 1 and slide to df = 1000. How does the t curve change? How does it compare with the z curve at each end of the slider?",
+     "At df = 1 the t curve is much lower in the middle and has much heavier tails than z. As df increases, the peak rises and the tails thin out. By df = 30 the two curves nearly overlap, and at df = 1000 they are indistinguishable."],
+    ["Shade two tails beyond t = 2. Compare the area under the t curve with the area under the z curve for df = 4, 15 and 100.",
+     "The t area is always larger: about 0.116 for df = 4, 0.064 for df = 15 and 0.048 for df = 100, compared with 0.046 for z. The heavier tails put more area beyond ±2, especially when df is small."],
+    ["Set the cutoff by a confidence level of 95%. What happens to t<sub>c</sub> as df increases? Where does it end up?",
+     "t<sub>c</sub> decreases as df increases: 2.776 for df = 4, 2.131 for df = 15, 2.042 for df = 30 and 1.984 for df = 100. It approaches z<sub>c</sub> = 1.960, the value in the z row of the t-table."],
+    ["Why does a confidence interval for μ that uses t<sub>c</sub> come out wider than one that uses z<sub>c</sub> with the same data?",
+     "Because t<sub>c</sub> > z<sub>c</sub> for every finite df. Estimating σ with s adds uncertainty, and the larger critical value widens the interval to account for it, so the interval still captures μ at the stated rate."],
+    ["If σ is unknown but we standardize with s and use the z-table anyway, will our p-values be too large or too small? What about our confidence intervals?",
+     "The p-values will be too small (z tail areas are smaller than t tail areas), so we would reject H₀ too often. The intervals will be too narrow and will capture μ less often than the stated confidence level. The problem is worst for small samples."]
+  ];
+  var open = {};
+  function renderQs() {
+    $("qs").innerHTML = QS.map(function (q, i) {
+      return "<li><span>" + q[0] + '</span><button type="button" class="ghost" data-q="' + i + '" aria-expanded="' + !!open[i] + '">' + (open[i] ? "Hide answer" : "Show answer") + "</button>" +
+        '<div class="ans"' + (open[i] ? "" : " hidden") + ">" + q[1] + "</div></li>";
+    }).join("");
+  }
+  $("qs").addEventListener("click", function (e) { var b = e.target.closest("button[data-q]"); if (!b) return; var i = +b.getAttribute("data-q"); open[i] = !open[i]; renderQs(); });
+  $("revealAll").addEventListener("click", function () { QS.forEach(function (_, i) { open[i] = true; }); renderQs(); });
+  $("hideAll").addEventListener("click", function () { open = {}; renderQs(); });
+
+  var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(render, 120); });
+  render(); renderQs();
+})();
+</script>
+</body></html>
