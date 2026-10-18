@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Central Limit Theorem Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+
+/* Layout: one narrow working column; population card, then numbered parts (one sample, many samples, compare n) */
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #1d2430;
+  --muted: #5b6575;
+  --rule: #d9dee6;
+  --soft: #eef1f5;
+  --hit: #3c78d8;
+  --miss: #d1495b;
+  --gold: #f1c232;
+  --gold-soft: #fdf3cf;
+  --gold-ink: #6b5200;
+  --fail: #9aa3b2;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --panel: #1a2029; --ink: #e8ecf2; --muted: #a2acbb; --rule: #2e3643; --soft: #222a35;
+    --hit: #78a6f0; --miss: #f07a8a; --gold: #f1c232; --gold-soft: #3a3214; --gold-ink: #f6d877; --fail: #6c7686;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1a2029; --ink: #e8ecf2; --muted: #a2acbb; --rule: #2e3643; --soft: #222a35;
+  --hit: #78a6f0; --miss: #f07a8a; --gold: #f1c232; --gold-soft: #3a3214; --gold-ink: #f6d877; --fail: #6c7686;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1rem; line-height: 1.45; }
+.wrap { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 18px; }
+header h1 { font-family: var(--display); font-weight: 700; font-size: clamp(1.9rem, 5vw, 2.6rem); line-height: 1.05; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 65ch; }
+.label { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .82rem; color: var(--muted); }
+section.part { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.part h2 { font-family: var(--display); font-weight: 700; font-size: 1.45rem; margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.part h2 .num { font-size: .95rem; color: var(--gold-ink); background: var(--gold-soft); border: 1px solid var(--gold); border-radius: 999px; padding: 0 9px; }
+.part > p { margin: 0; max-width: 70ch; }
+.settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+select, input[type=number] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; width: 100%; }
+select:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.src { font-size: .85rem; color: var(--muted); margin: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font-family: var(--display); font-weight: 600; font-size: 1.02rem; letter-spacing: .03em; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--ink); background: var(--ink); color: var(--panel); }
+button.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+button:hover { filter: brightness(1.12); }
+button.ghost:hover { background: var(--soft); filter: none; }
+.grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.grid i { width: var(--cell, 12px); height: var(--cell, 12px); border-radius: 2px; background: var(--soft); border: 1px solid var(--rule); display: block; }
+.grid i.s { background: var(--gold); border-color: var(--gold); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .9rem; color: var(--muted); align-items: center; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px 28px; font-variant-numeric: tabular-nums; }
+.stat b { display: block; font-family: var(--display); font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.steps { display: grid; gap: 8px; }
+.step { border: 1px solid var(--rule); border-left: 4px solid var(--gold); border-radius: 6px; padding: 10px 12px; background: var(--soft); display: grid; gap: 6px; min-width: 0; }
+.step .top { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.step .top strong { font-family: var(--display); font-size: 1.12rem; font-weight: 600; }
+.step .ans { font-variant-numeric: tabular-nums; overflow-x: auto; }
+.step .ans p { margin: 2px 0; }
+.step button { font-size: .9rem; padding: 4px 10px; }
+.hl { background: var(--gold-soft); border-bottom: 2px solid var(--gold); padding: 0 3px; font-weight: 600; white-space: nowrap; }
+.ok { color: var(--hit); font-weight: 600; }
+.bad { color: var(--miss); font-weight: 600; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .92em; line-height: 1.15; margin: 0 2px; }
+.frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px; }
+.rad { border-top: 1px solid currentColor; padding: 0 2px; display: inline-block; line-height: 1.2; }
+.rad .frac > span:first-child { padding-top: .35em; }
+.chartbox { overflow-x: auto; }
+svg text { font-family: var(--body); fill: var(--muted); font-size: 12px; }
+svg .ptext { fill: var(--ink); font-weight: 600; }
+.note { font-size: .9rem; color: var(--muted); margin: 0; }
+.tally { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: end; font-variant-numeric: tabular-nums; }
+.tally .big { font-family: var(--display); font-size: 2.1rem; font-weight: 700; line-height: 1; }
+.tally .big.hit { color: var(--hit); }
+.tally .big.miss { color: var(--miss); }
+.qs { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 70ch; }
+.oneline { margin: 0; }
+.ph { position: relative; display: inline-block; font-style: italic; text-transform: none; line-height: 1; padding-right: .04em; }
+.ph::before { content: "\02C6"; position: absolute; left: 50%; top: -.26em; transform: translateX(-42%); font-style: normal; font-size: .95em; line-height: 1; }
+sub .ph::before { top: -.24em; }
+.zsvg { display: block; width: 100%; max-width: 380px; height: auto; margin-top: 6px; }
+.mini { overflow-x: auto; }
+.mini table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .95rem; min-width: 100%; }
+.mini th { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .8rem; color: var(--muted); text-align: right; padding: 6px 10px; border-bottom: 2px solid var(--ink); background: var(--gold-soft); white-space: nowrap; }
+.mini td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.mini th:first-child, .mini td:first-child { text-align: left; }
+math { font-size: 1.12em; }
+math[display="block"] { margin: 4px 0; }
+.shapes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.shape { text-align: left; background: var(--panel); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; }
+.shape b { font-family: var(--display); font-size: 1.1rem; font-weight: 600; letter-spacing: .02em; }
+.shape svg { width: 100%; height: 34px; display: block; }
+.shape[aria-pressed="true"] { border: 2px solid var(--gold); background: var(--gold-soft); }
+.shape:hover { filter: none; background: var(--soft); }
+.shape[aria-pressed="true"]:hover { background: var(--gold-soft); }
+.nbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+.nbtns button { min-width: 3.2em; }
+.nbtns button[aria-pressed="false"] { background: transparent; color: var(--ink); border-color: var(--rule); }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: .95rem; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--hit); }
+.sampinfo { display: inline-flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; justify-self: start; background: var(--gold-soft); border: 1px solid var(--gold); border-radius: 6px; padding: 6px 12px; font-variant-numeric: tabular-nums; }
+.sampinfo b { font-family: var(--display); font-size: 1.25rem; }
+.dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
+.tri { display: inline-block; width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 12px solid var(--gold); vertical-align: -1px; margin-right: 6px; }
+.model { border: 1px solid var(--rule); border-left: 4px solid var(--gold); border-radius: 6px; background: var(--soft); padding: 10px 14px; display: grid; gap: 6px; }
+.model .eqs { display: flex; flex-wrap: wrap; gap: 6px 40px; align-items: center; }
+.cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.cmp figure { margin: 0; border: 1px solid var(--rule); border-radius: 8px; padding: 6px 8px 4px; min-width: 0; }
+.cmp figcaption { font-family: var(--display); font-weight: 600; font-size: 1rem; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.cmp figcaption span { font-family: var(--body); font-weight: 400; font-size: .85rem; color: var(--muted); }
+.cmp svg { width: 100%; height: auto; display: block; }
+.qs li { margin-bottom: 8px; }
+.qs li > span { display: block; margin-bottom: 4px; }
+.qs .ans { margin-top: 6px; }
+.qs .ans { background: var(--soft); border-left: 3px solid var(--hit); border-radius: 4px; padding: 6px 10px; font-size: .95rem; }
+.qs button { justify-self: start; font-size: .85rem; padding: 3px 10px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="label">MthStat 215 · Sampling distribution of the mean</div>
+    <h1>Central Limit Theorem Lab</h1>
+    <p>Pick a population shape and a sample size. Draw samples one at a time to see where each sample mean lands, then draw hundreds of samples to build the sampling distribution of <math><mover accent="true"><mi>x</mi><mo>¯</mo></mover></math>.</p>
+  </header>
+
+  <section class="part" aria-labelledby="h0">
+    <h2 id="h0">Choose the population</h2>
+    <div class="shapes" id="shapes" role="group" aria-label="Population shape"></div>
+    <div>
+      <div class="label" style="margin-bottom:4px">Sample size <i>n</i></div>
+      <div class="nbtns" id="nbtns" role="group" aria-label="Sample size"></div>
+    </div>
+    <div class="sampinfo" id="popinfo"></div>
+    <div class="chartbox"><svg id="pop" role="img" aria-label="Population distribution"></svg></div>
+    <p class="src" id="popnote"></p>
+  </section>
+
+  <section class="part" aria-labelledby="h1">
+    <h2 id="h1"><span class="num">Part 1</span> One sample at a time</h2>
+    <p>Each click takes one random sample of size <i>n</i> from the population and calculates its mean. Every sample mean is also added to the dot plot in Part 2.</p>
+    <div class="row"><button id="one" type="button">Draw 1 sample</button></div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--hit);opacity:.75"></span>each dot is a single data value drawn from the population</span>
+      <span><span class="tri"></span>the sample mean <math><mover accent="true"><mi>x</mi><mo>¯</mo></mover></math> of those <i>n</i> values</span>
+    </div>
+    <div class="sampinfo" id="oneinfo"></div>
+    <div class="chartbox"><svg id="samp" role="img" aria-label="Values in the most recent sample"></svg></div>
+  </section>
+
+  <section class="part" aria-labelledby="h2">
+    <h2 id="h2"><span class="num">Part 2</span> Many samples: the sampling distribution <span style="white-space:nowrap">of <math><mover accent="true"><mi>x</mi><mo>¯</mo></mover></math></span></h2>
+    <p>Add samples until the shape of the dot plot is clear. The newest sample means are shown in gold so you can see where they land.</p>
+    <div class="row">
+      <button id="add1" type="button">+ 1 sample</button>
+      <button id="add10" type="button">+ 10 samples</button>
+      <button id="add100" type="button">+ 100 samples</button>
+      <button id="add1000" type="button">+ 1,000 samples</button>
+      <button id="clear" type="button" class="ghost">Clear</button>
+    </div>
+    <div class="row">
+      <label class="toggle" for="zoom"><input type="checkbox" id="zoom" checked><span>Zoom in on the sample means</span></label>
+      <label class="toggle" for="curve"><input type="checkbox" id="curve"><span>Show the Normal model</span></label>
+    </div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--hit)"></span>each dot is the mean <math><mover accent="true"><mi>x</mi><mo>¯</mo></mover></math> of one sample of size <i>n</i> = <b id="nLeg">100</b></span>
+      <span><span class="dot" style="background:var(--gold);box-shadow:0 0 0 1px var(--gold-ink)"></span>the most recent sample(s)</span>
+    </div>
+    <div class="sampinfo" id="siminfo"></div>
+    <div class="chartbox"><svg id="dist" role="img" aria-label="Dot plot of sample means"></svg></div>
+    <p class="note" id="distnote"></p>
+    <div class="model" id="model"></div>
+  </section>
+
+  <section class="part" aria-labelledby="h3">
+    <h2 id="h3"><span class="num">Part 3</span> Compare sample sizes</h2>
+    <p>Each panel shows 5,000 sample means from the population you chose, for a different sample size, all on the same 0 to 100 axis. The dashed line marks μ.</p>
+    <div class="row"><button id="cmpBtn" type="button">Draw new panels</button></div>
+    <div class="cmp" id="cmp"></div>
+  </section>
+
+  <section class="part" aria-labelledby="h3b">
+    <h2 id="h3b"><span class="num">Part 4</span> Compare populations</h2>
+    <p>Each panel shows 1,000 sample means of size <i>n</i> = <b id="nPops">100</b> (the sample size chosen at the top) from each of the four populations. The small outline in each corner is the population shape. Each panel is zoomed to its own μ ± 4.5 σ/√<i>n</i>. Change <i>n</i> at the top to see how quickly each shape becomes Normal.</p>
+    <div class="row"><button id="popsBtn" type="button">Draw new panels</button>
+      <label class="toggle" for="popsCurve"><input type="checkbox" id="popsCurve"><span>Show the Normal model</span></label></div>
+    <div class="cmp" id="pops"></div>
+  </section>
+
+  <section class="part" aria-labelledby="h4">
+    <h2 id="h4">What do you notice?</h2>
+    <div class="row"><button id="revealAll" type="button" class="ghost">Show all answers</button><button id="hideAll" type="button" class="ghost">Hide all answers</button></div>
+    <ol class="qs" id="qs"></ol>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var POPS = {
+    right: { a: 2, b: 6, name: "Right-skewed", ex: "has a long tail of large values (like commute times or wait times)" },
+    left:  { a: 6, b: 2, name: "Left-skewed",  ex: "has a long tail of small values (like scores on an easy exam)" },
+    sym:   { a: 5, b: 5, name: "Symmetric",    ex: "is mound-shaped and symmetric (like many measurement errors)" },
+    unif:  { a: 1, b: 1, name: "Uniform",      ex: "makes every value from 0 to 100 equally likely (like a random-number generator)" }
+  };
+  var NS = [5, 10, 30, 50, 100];
+  var CMP_NS = [5, 10, 30, 100];
+  var state = { pop: "right", n: 100, means: [], newCount: 0, last: null };
+  var $ = function (id) { return document.getElementById(id); };
+  var XB = '<math><mover accent="true"><mi>x</mi><mo>¯</mo></mover></math>';
+  var XBsub = '<mover accent="true"><mi>x</mi><mo>¯</mo></mover>';
+
+  function fact(k) { var r = 1; for (var i = 2; i <= k; i++) r *= i; return r; }
+  function popMoments(P) { var a = P.a, b = P.b; return { mu: 100 * a / (a + b), sigma: 100 * Math.sqrt(a * b / ((a + b) * (a + b) * (a + b + 1))) }; }
+  function pdf(P, x) { var u = Math.min(0.9995, Math.max(0.0005, x / 100)); var B = fact(P.a - 1) * fact(P.b - 1) / fact(P.a + P.b - 1); return Math.pow(u, P.a - 1) * Math.pow(1 - u, P.b - 1) / B / 100; }
+  function draw(P) { var k = P.a + P.b - 1, u = new Array(k); for (var i = 0; i < k; i++) u[i] = Math.random(); u.sort(function (p, q) { return p - q; }); return 100 * u[P.a - 1]; }
+  function sample(n) { var P = POPS[state.pop], v = new Array(n); for (var i = 0; i < n; i++) v[i] = draw(P); return v; }
+  function mean(v) { var s = 0; for (var i = 0; i < v.length; i++) s += v[i]; return s / v.length; }
+  function sd(v) { if (v.length < 2) return NaN; var m = mean(v), s = 0; for (var i = 0; i < v.length; i++) s += (v[i] - m) * (v[i] - m); return Math.sqrt(s / (v.length - 1)); }
+  function f(x, d) { return isFinite(x) ? x.toFixed(d) : "–"; }
+  function W(svg) { return Math.max(svg.parentNode.clientWidth, 300); }
+  function put(svg, w, H, o) { svg.setAttribute("viewBox", "0 0 " + w + " " + H); svg.setAttribute("width", w); svg.setAttribute("height", H); svg.innerHTML = o.join(""); }
+  function axis(x, y0, w, pl, pr, lo, hi, step) {
+    var o = '<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + y0 + '" y2="' + y0 + '" stroke="var(--ink)" stroke-width="1"/>';
+    for (var t = Math.ceil(lo / step - 1e-9) * step; t <= hi + 1e-9; t += step) {
+      o += '<line x1="' + x(t) + '" x2="' + x(t) + '" y1="' + y0 + '" y2="' + (y0 + 4) + '" stroke="var(--ink)"/>';
+      o += '<text x="' + x(t) + '" y="' + (y0 + 17) + '" text-anchor="middle">' + (+t.toFixed(2)) + "</text>";
+    }
+    return o;
+  }
+  function niceStep(span) { return span > 60 ? 10 : span > 30 ? 5 : span > 12 ? 2 : span > 6 ? 1 : 0.5; }
+
+  // ---------- controls ----------
+  function shapeIcon(P) {
+    var pts = [], m = 0, x;
+    for (x = 0.5; x <= 99.5; x += 1) m = Math.max(m, pdf(P, x));
+    for (x = 0; x <= 100; x += 2) pts.push((x * 1.6).toFixed(1) + "," + (32 - 28 * Math.min(pdf(P, x) / m, 1)).toFixed(1));
+    return '<svg viewBox="0 0 160 34" aria-hidden="true"><polygon points="0,32 ' + pts.join(" ") + ' 160,32" fill="var(--gold-soft)" stroke="var(--ink)" stroke-width="1.5"/></svg>';
+  }
+  function buildControls() {
+    var h = "";
+    Object.keys(POPS).forEach(function (k) { h += '<button type="button" class="shape" data-k="' + k + '" aria-pressed="' + (k === state.pop) + '"><b>' + POPS[k].name + "</b>" + shapeIcon(POPS[k]) + "</button>"; });
+    $("shapes").innerHTML = h;
+    var nb = "";
+    NS.forEach(function (n) { nb += '<button type="button" data-n="' + n + '" aria-pressed="' + (n === state.n) + '">n = ' + n + "</button>"; });
+    $("nbtns").innerHTML = nb;
+    $("nLeg").textContent = state.n;
+  }
+  $("shapes").addEventListener("click", function (e) { var b = e.target.closest("button[data-k]"); if (!b) return; state.pop = b.getAttribute("data-k"); reset(); buildControls(); renderAll(); drawCompare(); });
+  $("nbtns").addEventListener("click", function (e) { var b = e.target.closest("button[data-n]"); if (!b) return; state.n = +b.getAttribute("data-n"); reset(); buildControls(); renderAll(); drawPops(); });
+  function reset() { state.means = []; state.newCount = 0; state.last = null; }
+
+  // ---------- population ----------
+  function renderPop() {
+    var P = POPS[state.pop], M = popMoments(P), svg = $("pop"), w = W(svg), H = 150, pl = 14, pr = 14, pt = 12, pb = 30;
+    var x = function (v) { return pl + v / 100 * (w - pl - pr); };
+    var maxd = 0, t; for (t = 0.5; t < 100; t += 0.5) maxd = Math.max(maxd, pdf(P, t));
+    var y = function (dv) { return H - pb - dv / maxd * (H - pt - pb) * 0.95; };
+    var pts = [x(0) + "," + (H - pb)];
+    for (t = 0; t <= 100; t += 0.5) pts.push(x(t).toFixed(1) + "," + y(pdf(P, t)).toFixed(1));
+    pts.push(x(100) + "," + (H - pb));
+    var o = ['<polygon points="' + pts.join(" ") + '" fill="var(--soft)" stroke="var(--ink)" stroke-width="1.6"/>', axis(x, H - pb, w, pl, pr, 0, 100, 10)];
+    o.push('<line x1="' + x(M.mu) + '" x2="' + x(M.mu) + '" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--ink)" stroke-dasharray="5 4" stroke-width="1.4"/>');
+    o.push('<text class="ptext" x="' + x(M.mu) + '" y="' + (pt + 10) + '" dx="5">μ = ' + f(M.mu, 1) + "</text>");
+    put(svg, w, H, o);
+    $("popinfo").innerHTML = '<span class="label">Population</span><span>' + P.name + "</span><span>μ = <b>" + f(M.mu, 2) + "</b></span><span>σ = <b>" + f(M.sigma, 2) + "</b></span>";
+    $("popnote").textContent = "Values range from 0 to 100. This population " + P.ex + ".";
+  }
+
+  // ---------- part 1 ----------
+  $("one").addEventListener("click", function () {
+    var v = sample(state.n); state.last = { v: v, m: mean(v), s: sd(v) };
+    state.means.push(state.last.m); state.newCount = 1;
+    renderSample(); renderDist();
+  });
+  function renderSample() {
+    var svg = $("samp"), w = W(svg), pl = 14, pr = 14, M = popMoments(POPS[state.pop]);
+    var x = function (v) { return pl + v / 100 * (w - pl - pr); };
+    var o = [], H;
+    if (!state.last) {
+      H = 70; o.push(axis(x, 40, w, pl, pr, 0, 100, 10));
+      o.push('<text x="' + (w / 2) + '" y="22" text-anchor="middle">Click “Draw 1 sample” to take your first sample.</text>');
+      put(svg, w, H, o);
+      $("oneinfo").innerHTML = '<span class="label">Your sample</span><span>n = ' + state.n + "</span><span>no sample yet</span>";
+      return;
+    }
+    var bw = 2, bins = {}, maxStack = 1, r = state.n <= 10 ? 6 : state.n <= 30 ? 4.5 : 3.4;
+    state.last.v.forEach(function (v) { var b = Math.floor(v / bw); bins[b] = (bins[b] || 0) + 1; maxStack = Math.max(maxStack, bins[b]); });
+    var dy = Math.min(2 * r + 1, 150 / maxStack), base = 24 + maxStack * dy + 14;
+    H = base + 34;
+    var cnt = {};
+    state.last.v.forEach(function (v) {
+      var b = Math.floor(v / bw); cnt[b] = (cnt[b] || 0) + 1;
+      o.push('<circle cx="' + x(b * bw + bw / 2) + '" cy="' + (base - 3 - r - (cnt[b] - 1) * dy) + '" r="' + r + '" fill="var(--hit)" fill-opacity="0.75"/>');
+    });
+    o.push(axis(x, base, w, pl, pr, 0, 100, 10));
+    o.push('<line x1="' + x(M.mu) + '" x2="' + x(M.mu) + '" y1="16" y2="' + base + '" stroke="var(--ink)" stroke-dasharray="5 4" stroke-width="1.2"/>');
+    o.push('<text x="' + x(M.mu) + '" y="12" text-anchor="middle">μ</text>');
+    var xm = x(state.last.m);
+    o.push('<line x1="' + xm + '" x2="' + xm + '" y1="20" y2="' + base + '" stroke="var(--gold)" stroke-width="3"/>');
+    o.push('<polygon points="' + xm + "," + (base + 2) + " " + (xm - 9) + "," + (base + 16) + " " + (xm + 9) + "," + (base + 16) + '" fill="var(--gold)" stroke="var(--gold-ink)"/>');
+    o.push('<text class="ptext" x="' + xm + '" y="' + (base + 30) + '" text-anchor="middle">sample mean = ' + f(state.last.m, 1) + "</text>");
+    put(svg, w, H, o);
+    $("oneinfo").innerHTML = '<span class="label">Most recent sample</span><span>n = ' + state.n + "</span><span>" + XB + " = <b>" + f(state.last.m, 2) + "</b></span><span>s = " + f(state.last.s, 2) + "</span>";
+  }
+
+  // ---------- part 2 ----------
+  function addMany(k) {
+    state.newCount = k;
+    var step = k >= 1000 ? 100 : k >= 100 ? 10 : 1, done = 0;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    (function tick() {
+      var m = Math.min(step, k - done);
+      for (var j = 0; j < m; j++) { var v = sample(state.n); state.means.push(mean(v)); if (done + j === k - 1) state.last = { v: v, m: mean(v), s: sd(v) }; }
+      done += m; renderDist();
+      if (done < k) { if (reduce) tick(); else requestAnimationFrame(tick); } else renderSample();
+    })();
+  }
+  $("add1").addEventListener("click", function () { addMany(1); });
+  $("add10").addEventListener("click", function () { addMany(10); });
+  $("add100").addEventListener("click", function () { addMany(100); });
+  $("add1000").addEventListener("click", function () { addMany(1000); });
+  $("clear").addEventListener("click", function () { reset(); renderSample(); renderDist(); });
+  ["zoom", "curve"].forEach(function (id) { $(id).addEventListener("change", renderDist); });
+
+  function npdf(x, m, s) { return Math.exp(-0.5 * Math.pow((x - m) / s, 2)) / (s * Math.sqrt(2 * Math.PI)); }
+  function renderDist() {
+    var P = POPS[state.pop], M = popMoments(P), se = M.sigma / Math.sqrt(state.n), N = state.means.length;
+    var zoom = $("zoom").checked, lo = 0, hi = 100;
+    if (zoom) { lo = Math.max(0, M.mu - 4.5 * se); hi = Math.min(100, M.mu + 4.5 * se); }
+    var svg = $("dist"), w = W(svg), pl = 14, pr = 14, pt = 22, pb = 44, maxPlot = 300;
+    var x = function (v) { return pl + (v - lo) / (hi - lo) * (w - pl - pr); };
+    // choose a dot size so the tallest stack fits
+    var r = 6, bins, maxStack, nb, bw, iter;
+    for (iter = 0; iter < 30; iter++) {
+      nb = Math.max(10, Math.floor((w - pl - pr) / (2 * r)));
+      bw = (hi - lo) / nb; bins = {}; maxStack = 0;
+      for (var i = 0; i < N; i++) { var b = Math.floor((state.means[i] - lo) / bw); if (b < 0 || b >= nb) continue; bins[b] = (bins[b] || 0) + 1; if (bins[b] > maxStack) maxStack = bins[b]; }
+      if (maxStack * 2 * r <= maxPlot || r <= 1.2) break;
+      r *= 0.88;
+    }
+    var dy = maxStack ? Math.min(2 * r, maxPlot / maxStack) : 2 * r;
+    var plotH = Math.max(120, Math.min(maxPlot, maxStack * dy) + 10);
+    var H = pt + plotH + pb, base = pt + plotH;
+    var o = [];
+    // draw older first, newest on top of their stacks
+    var cnt = {}, firstNew = N - Math.min(state.newCount, N);
+    // stack positions: older means at bottom, newer above
+    var placed = {};
+    var drawDot = function (idx, isNew) {
+      var m = state.means[idx], b = Math.floor((m - lo) / bw);
+      if (b < 0 || b >= nb) return;
+      placed[b] = (placed[b] || 0) + 1;
+      var cy = base - Math.max(r, dy / 2) - (placed[b] - 1) * dy;
+      o.push('<circle cx="' + x(lo + (b + 0.5) * bw).toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + Math.max(0.8, Math.min(r, dy / 2) - (r > 2 ? 0.4 : 0)).toFixed(2) + '" fill="' +
+        (isNew ? "var(--gold)" : "var(--hit)") + '"' + (isNew ? ' stroke="var(--gold-ink)" stroke-width="' + (r > 2 ? 0.8 : 0.4) + '"' : "") + "/>");
+    };
+    for (var k1 = 0; k1 < firstNew; k1++) drawDot(k1, false);
+    for (var k2 = firstNew; k2 < N; k2++) drawDot(k2, true);
+    if ($("curve").checked && N) {
+      var cp = [], scale = N * bw * dy;
+      for (var v2 = lo; v2 <= hi + 1e-9; v2 += (hi - lo) / 300) cp.push(x(v2).toFixed(1) + "," + Math.max(pt - 10, base - npdf(v2, M.mu, se) * scale).toFixed(1));
+      o.push('<polyline points="' + cp.join(" ") + '" fill="none" stroke="var(--gold-ink)" stroke-width="2.2"/>');
+    }
+    o.push(axis(x, base, w, pl, pr, lo, hi, niceStep(hi - lo)));
+    o.push('<line x1="' + x(M.mu) + '" x2="' + x(M.mu) + '" y1="' + (pt - 6) + '" y2="' + base + '" stroke="var(--ink)" stroke-dasharray="5 4" stroke-width="1.2"/>');
+    o.push('<text x="' + x(M.mu) + '" y="' + (pt - 9) + '" text-anchor="middle">μ</text>');
+    o.push('<text x="' + (w / 2) + '" y="' + (H - 6) + '" text-anchor="middle">sample means from samples of size n = ' + state.n + "</text>");
+    if (!N) o.push('<text x="' + (w / 2) + '" y="' + (pt + plotH / 2) + '" text-anchor="middle">No samples yet. Use the buttons above or Part 1.</text>');
+    put(svg, w, H, o);
+    var mm = N ? mean(state.means) : NaN, ss = N > 1 ? sd(state.means) : NaN;
+    $("siminfo").innerHTML = '<span class="label">Simulation</span><span>' + N.toLocaleString() + " sample means</span><span>mean of the " + XB + "'s = <b>" + f(mm, 2) +
+      "</b></span><span>SD of the " + XB + "'s = <b>" + f(ss, 2) + "</b></span>";
+    $("distnote").textContent = (zoom ? "Zoomed in to μ ± 4.5 standard deviations of the sampling distribution. Uncheck the box to see the full 0 to 100 scale of the population." :
+      "Shown on the full 0 to 100 scale of the population, so you can compare this spread with the population's spread.") + (r < 2 && N ? " Dots shrink as more samples are added so every sample mean still fits." : "");
+    $("model").innerHTML = '<div class="label">The sampling distribution model for ' + XB + "</div>" +
+      "<div>For samples of size <i>n</i> = " + state.n + " from this population, the sampling distribution model says the mean of the sample means will be</div>" +
+      '<math display="block"><msub><mi>μ</mi>' + XBsub + "</msub><mo>=</mo><mi>μ</mi><mo>=</mo><mn>" + f(M.mu, 2) + "</mn></math>" +
+      "<div>and the standard deviation of the sample means will be</div>" +
+      '<math display="block"><msub><mi>σ</mi>' + XBsub + '</msub><mo>=</mo><mfrac><mi>σ</mi><msqrt><mi>n</mi></msqrt></mfrac><mo>=</mo><mfrac><mn>' + f(M.sigma, 2) +
+      "</mn><msqrt><mn>" + state.n + "</mn></msqrt></mfrac><mo>=</mo><mn>" + f(se, 2) + "</mn></math>" +
+      "<div>Compare these with the simulated values above. For large enough <i>n</i>, the shape is approximately Normal (the Central Limit Theorem).</div>";
+  }
+
+  // ---------- part 3 ----------
+  function drawCompare() {
+    var P = POPS[state.pop], M = popMoments(P), h = "";
+    CMP_NS.forEach(function (n) {
+      var nb = 100, bw = 1, counts = new Array(nb).fill(0), maxC = 0;
+      for (var i = 0; i < 5000; i++) { var s = 0; for (var j = 0; j < n; j++) s += draw(P); counts[Math.min(nb - 1, Math.floor(s / n / bw))]++; }
+      counts.forEach(function (c) { maxC = Math.max(maxC, c); });
+      var w = 300, H = 120, pl = 8, pr = 8, pb = 22, pt = 6, x = function (v) { return pl + v / 100 * (w - pl - pr); }, o = "";
+      counts.forEach(function (c, i) { if (!c) return; var hh = c / maxC * (H - pt - pb); o += '<rect x="' + x(i * bw).toFixed(1) + '" y="' + (H - pb - hh).toFixed(1) + '" width="' + Math.max(0.8, x(bw) - x(0) - 0.4).toFixed(1) + '" height="' + hh.toFixed(1) + '" fill="var(--hit)"/>'; });
+      o += '<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + (H - pb) + '" y2="' + (H - pb) + '" stroke="var(--ink)"/>';
+      [0, 25, 50, 75, 100].forEach(function (t) { o += '<text x="' + x(t) + '" y="' + (H - 6) + '" text-anchor="middle" style="font-size:11px">' + t + "</text>"; });
+      o += '<line x1="' + x(M.mu) + '" x2="' + x(M.mu) + '" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--ink)" stroke-dasharray="4 3"/>';
+      h += "<figure><figcaption>n = " + n + "<span>σ/√n = " + f(M.sigma / Math.sqrt(n), 2) + "</span></figcaption>" +
+        '<svg viewBox="0 0 ' + w + " " + H + '" role="img" aria-label="5,000 sample means for n = ' + n + '">' + o + "</svg></figure>";
+    });
+    $("cmp").innerHTML = h;
+  }
+  $("cmpBtn").addEventListener("click", drawCompare);
+
+  // ---------- part 4 ----------
+  function drawPops() {
+    var n = state.n, h = "";
+    $("nPops").textContent = n;
+    Object.keys(POPS).forEach(function (k) {
+      var P = POPS[k], M = popMoments(P), se = M.sigma / Math.sqrt(n);
+      var lo = M.mu - 4.5 * se, hi = M.mu + 4.5 * se, nb = 40, bw = (hi - lo) / nb, counts = new Array(nb).fill(0), maxC = 0, i, j;
+      for (i = 0; i < 1000; i++) { var s = 0; for (j = 0; j < n; j++) s += draw(P); var b = Math.floor((s / n - lo) / bw); if (b >= 0 && b < nb) counts[b]++; }
+      counts.forEach(function (c) { maxC = Math.max(maxC, c); });
+      var w = 300, H = 130, pl = 8, pr = 8, pb = 22, pt = 8, x = function (v) { return pl + (v - lo) / (hi - lo) * (w - pl - pr); }, o = "";
+      var ymax = Math.max(maxC, 1000 * bw / (se * Math.sqrt(2 * Math.PI)));
+      counts.forEach(function (c, i) { if (!c) return; var hh = c / ymax * (H - pt - pb); o += '<rect x="' + x(lo + i * bw).toFixed(1) + '" y="' + (H - pb - hh).toFixed(1) + '" width="' + Math.max(0.8, x(bw) - x(0) - 0.6).toFixed(1) + '" height="' + hh.toFixed(1) + '" fill="var(--hit)"/>'; });
+      if ($("popsCurve").checked) {
+        var cp = [];
+        for (var v = lo; v <= hi + 1e-9; v += (hi - lo) / 150) cp.push(x(v).toFixed(1) + "," + (H - pb - npdf(v, M.mu, se) * 1000 * bw / ymax * (H - pt - pb)).toFixed(1));
+        o += '<polyline points="' + cp.join(" ") + '" fill="none" stroke="var(--gold-ink)" stroke-width="2"/>';
+      }
+      // population thumbnail
+      var tm = 0, t, tp = [];
+      for (t = 0.5; t < 100; t += 1) tm = Math.max(tm, pdf(P, t));
+      for (t = 0; t <= 100; t += 2) tp.push((w - pr - 64 + t * 0.62).toFixed(1) + "," + (pt + 26 - 24 * Math.min(pdf(P, t) / tm, 1)).toFixed(1));
+      o += '<polygon points="' + (w - pr - 64) + "," + (pt + 26) + " " + tp.join(" ") + " " + (w - pr - 2) + "," + (pt + 26) + '" fill="var(--gold-soft)" stroke="var(--muted)" stroke-width="1"/>';
+      o += '<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + (H - pb) + '" y2="' + (H - pb) + '" stroke="var(--ink)"/>';
+      var st = niceStep(hi - lo) * 2;
+      for (t = Math.ceil(lo / st) * st; t <= hi + 1e-9; t += st) o += '<text x="' + x(t).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" style="font-size:11px">' + (+t.toFixed(2)) + "</text>";
+      o += '<line x1="' + x(M.mu) + '" x2="' + x(M.mu) + '" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--ink)" stroke-dasharray="4 3"/>';
+      h += "<figure><figcaption>" + P.name + "<span>μ = " + f(M.mu, 1) + ", σ/√n = " + f(se, 2) + "</span></figcaption>" +
+        '<svg viewBox="0 0 ' + w + " " + H + '" role="img" aria-label="1,000 sample means of size ' + n + " from the " + P.name + ' population">' + o + "</svg></figure>";
+    });
+    $("pops").innerHTML = h;
+  }
+  $("popsBtn").addEventListener("click", drawPops);
+  $("popsCurve").addEventListener("change", drawPops);
+
+  // ---------- questions ----------
+  var QS = [
+    ["In Part 1, do the sample mean and the individual values land in the same places? Which is usually closer to μ?",
+     "The individual values spread across much of the population's range, but the sample mean lands close to μ. Averaging lets high and low values offset each other, so a mean varies much less than a single value."],
+    ["In Part 2, how does the mean of all the sample means compare with μ? How does their standard deviation compare with σ/√n?",
+     "The mean of the sample means is very close to μ, and their standard deviation is very close to σ/√n. They are not exactly equal because we simulated a limited number of samples; adding more samples brings them closer."],
+    ["Choose the right-skewed population. What shape is the sampling distribution with n = 5? With n = 30 or n = 100?",
+     "With n = 5 the sample means are still somewhat right-skewed, although much less than the population. By n = 30 the dot plot is close to symmetric and bell-shaped, and with n = 100 it is very close to Normal."],
+    ["Repeat with the left-skewed population. Does the sampling distribution become Normal at about the same sample size?",
+     "Yes. The left-skewed population is a mirror image of the right-skewed one, so the sample means are slightly left-skewed for small n and become approximately Normal at about the same sample sizes."],
+    ["For the symmetric (mound-shaped) population, how small can n be and still give a sampling distribution that looks Normal? Why is this population different?",
+     "Even n = 5 gives a sampling distribution that looks Normal. The population is already symmetric and mound-shaped, so there is no skew for averaging to remove. (If the population is exactly Normal, " + XB + " is Normal for every n.)"],
+    ["In Part 3, which features of the sampling distribution change as n grows (center, spread, shape), and which stay the same?",
+     "The center stays at μ for every n. The spread shrinks, following σ/√n, so it takes 4 times the sample size to cut the spread in half. The shape becomes more Normal as n grows."],
+    ["In Part 4, try n = 5, then n = 30, then n = 100. Which populations give a sampling distribution that already looks Normal at n = 5? Which need a larger n, and why?",
+     "At n = 5 the symmetric population already gives an approximately Normal sampling distribution, and the uniform one is very close (it is symmetric with no long tails). The right- and left-skewed populations still show some skew at n = 5 and need a larger n before the sample means look Normal. By n = 30 all four look approximately Normal. The more skewed the population, the larger n must be for the CLT to take effect, but for every population the center is μ and the spread is σ/√n."],
+    ["Why does the rule of thumb n ≥ 30 appear in our conditions for confidence intervals and tests about μ?",
+     "Our procedures for μ use a Normal (or t) model for " + XB + ". If the population is not Normal, the CLT says " + XB + " is approximately Normal once n is large enough, and n ≥ 30 is usually enough unless the population is extremely skewed. If the population is Normal, any n works."]
+  ];
+  var open = {};
+  function renderQs() {
+    $("qs").innerHTML = QS.map(function (q, i) {
+      return "<li><span>" + q[0] + '</span><button type="button" class="ghost" data-q="' + i + '" aria-expanded="' + !!open[i] + '">' + (open[i] ? "Hide answer" : "Show answer") + "</button>" +
+        '<div class="ans"' + (open[i] ? "" : " hidden") + ">" + q[1] + "</div></li>";
+    }).join("");
+  }
+  $("qs").addEventListener("click", function (e) { var b = e.target.closest("button[data-q]"); if (!b) return; var i = +b.getAttribute("data-q"); open[i] = !open[i]; renderQs(); });
+  $("revealAll").addEventListener("click", function () { QS.forEach(function (_, i) { open[i] = true; }); renderQs(); });
+  $("hideAll").addEventListener("click", function () { open = {}; renderQs(); });
+
+  function renderAll() { renderPop(); renderSample(); renderDist(); }
+  var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(renderAll, 120); });
+  buildControls(); renderAll(); drawCompare(); drawPops(); renderQs();
+})();
+</script>
+</body></html>
