@@ -99,6 +99,19 @@ sub .ph::before { top: -.24em; }
 .mini td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
 .mini th:first-child, .mini td:first-child { text-align: left; }
 [hidden] { display: none !important; }
+.ctl { display: grid; gap: 6px; padding: 8px 10px; background: var(--soft); border-radius: 8px; }
+.crow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.crow > .label { min-width: 5.2em; }
+.seg.sm button { font-size: .88rem; padding: 3px 9px; }
+.inl { display: flex; align-items: center; gap: 6px; flex: 1 1 200px; min-width: 180px; }
+.inl input[type=range] { flex: 1; height: 22px; }
+.num { font-family: var(--display); font-weight: 700; font-size: 1.15rem; font-variant-numeric: tabular-nums; min-width: 2.6em; }
+.num.big { font-size: 1.35rem; min-width: 4.6em; }
+.dfrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dfrow input[type=range] { flex: 1 1 220px; height: 26px; }
+.part { gap: 10px; }
+.wrap { gap: 12px; padding-block: 12px 40px; }
+header h1 { font-size: clamp(1.5rem, 4vw, 2rem); }
 .toggle { display: inline-flex; gap: 8px; align-items: center; font-size: .95rem; cursor: pointer; }
 .toggle input { width: 18px; height: 18px; accent-color: var(--hit); }
 .seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
@@ -127,46 +140,35 @@ input[type=range] { width: 100%; accent-color: var(--hit); height: 28px; }
   <header>
     <div class="label">MthStat 215 · t-distributions</div>
     <h1>Student's <i>t</i> vs. the Standard Normal</h1>
-    <p>Change the degrees of freedom and watch the <i>t</i> curve approach the standard Normal (<i>z</i>) curve. Shade tail areas or find critical values, and compare the <i>t</i> answer with the <i>z</i> answer.</p>
   </header>
 
-  <section class="part" aria-labelledby="h1">
-    <h2 id="h1">The curves</h2>
-    <div class="slider">
-      <div class="top"><label class="label" for="df">Degrees of freedom</label><span class="val">df = <span id="dfv">4</span></span></div>
+  <section class="part" aria-label="t and standard Normal curves">
+    <div class="ctl">
+      <div class="crow"><span class="label">Shade</span>
+        <div class="seg sm" id="mode" role="group" aria-label="What to shade">
+          <button type="button" data-m="none" aria-pressed="false">Nothing</button>
+          <button type="button" data-m="upper" aria-pressed="false">Upper tail</button>
+          <button type="button" data-m="lower" aria-pressed="false">Lower tail</button>
+          <button type="button" data-m="two" aria-pressed="true">Two tails</button>
+          <button type="button" data-m="mid" aria-pressed="false">Middle</button>
+        </div>
+      </div>
+      <div class="crow" id="byrow"><span class="label">Cutoff by</span>
+        <div class="seg sm" id="by" role="group" aria-label="Set the cutoff by">
+          <button type="button" data-b="t" aria-pressed="true">t-value</button>
+          <button type="button" data-b="c" aria-pressed="false">confidence level</button>
+        </div>
+        <div class="inl" id="tbox"><label class="label" for="tv">t =</label><input type="range" id="tv" min="0" max="5" step="0.01" value="2"><b class="num" id="tvv">2.00</b></div>
+        <div class="seg sm" id="conf" role="group" aria-label="Confidence level" hidden></div>
+      </div>
+    </div>
+
+    <div class="dfrow">
+      <label class="label" for="df">df</label>
       <input type="range" id="df" min="0" max="35" step="1" value="3" aria-describedby="dfnote">
-      <p class="src" id="dfnote">The slider steps through the rows of our t-table: df = 1 to 30, then 40, 60, 80, 100 and 1000.</p>
+      <b class="num big">df = <span id="dfv">4</span></b>
+      <label class="toggle" for="norm"><input type="checkbox" id="norm" checked><span>z curve</span></label>
     </div>
-    <div class="row">
-      <label class="toggle" for="norm"><input type="checkbox" id="norm" checked><span>Show the standard Normal (z) curve</span></label>
-    </div>
-
-    <div>
-      <div class="label" style="margin-bottom:4px">Shade</div>
-      <div class="seg" id="mode" role="group" aria-label="What to shade">
-        <button type="button" data-m="none" aria-pressed="false">Nothing</button>
-        <button type="button" data-m="upper" aria-pressed="false">Upper tail</button>
-        <button type="button" data-m="lower" aria-pressed="false">Lower tail</button>
-        <button type="button" data-m="two" aria-pressed="true">Two tails</button>
-        <button type="button" data-m="mid" aria-pressed="false">Middle (confidence)</button>
-      </div>
-    </div>
-
-    <div>
-      <div class="label" style="margin-bottom:4px">Set the cutoff by</div>
-      <div class="seg" id="by" role="group" aria-label="Set the cutoff by">
-        <button type="button" data-b="t" aria-pressed="true">a t-value</button>
-        <button type="button" data-b="c" aria-pressed="false">a confidence level / area</button>
-      </div>
-    </div>
-    <div class="slider" id="tbox">
-      <div class="top"><label class="label" for="tv">Cutoff t</label><span class="val" id="tvv">2.00</span></div>
-      <input type="range" id="tv" min="0" max="5" step="0.01" value="2">
-    </div>
-    <div id="cbox" hidden>
-      <div class="seg" id="conf" role="group" aria-label="Confidence level"></div>
-    </div>
-
     <div class="legend">
       <span><span class="ln"></span>t-distribution, df = <b id="dfl">4</b></span>
       <span id="zleg"><span class="ln z"></span>standard Normal (z)</span>
@@ -175,6 +177,7 @@ input[type=range] { width: 100%; accent-color: var(--hit); height: 28px; }
     <div class="chartbox"><svg id="plot" role="img" aria-label="t and standard Normal density curves"></svg></div>
     <div class="cards" id="cards"></div>
     <div class="verdict" id="note"></div>
+    <p class="src" id="dfnote">The df slider steps through the rows of our t-table: df = 1 to 30, then 40, 60, 80, 100 and 1000.</p>
   </section>
 
   <section class="part" aria-labelledby="h2">
@@ -255,16 +258,14 @@ input[type=range] { width: 100%; accent-color: var(--hit); height: 28px; }
   function render() {
     var v = st.df, showZ = $("norm").checked;
     $("dfv").textContent = v; $("dfl").textContent = v; $("zleg").style.display = showZ ? "" : "none";
-    $("tbox").hidden = st.by !== "t"; $("cbox").hidden = st.by !== "c";
-    $("by").parentNode.style.display = st.mode === "none" ? "none" : "";
-    if (st.mode === "none") { $("tbox").hidden = true; $("cbox").hidden = true; }
-
+    $("byrow").hidden = st.mode === "none";
+    $("tbox").hidden = st.by !== "t"; $("conf").hidden = st.by !== "c";
     var ct, cz, onetail = tailFromConf();
     if (st.by === "c") { ct = tq(onetail, v); cz = zq(onetail); } else { ct = st.t; cz = st.t; }
     $("tvv").textContent = f(st.t, 2);
 
     // ---- plot ----
-    var svg = $("plot"), w = Math.max(svg.parentNode.clientWidth, 300), H = Math.round(Math.min(360, Math.max(240, w * 0.45)));
+    var svg = $("plot"), w = Math.max(svg.parentNode.clientWidth, 300), H = Math.round(Math.max(200, Math.min(340, w * 0.42, window.innerHeight * 0.42)));
     var pl = 14, pr = 14, pt = 26, pb = 34, lo = -5, hi = 5, ymax = 0.42;
     var x = function (u) { return pl + (u - lo) / (hi - lo) * (w - pl - pr); };
     var y = function (d) { return H - pb - d / ymax * (H - pt - pb); };
