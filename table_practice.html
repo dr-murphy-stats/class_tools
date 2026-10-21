@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Table Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+
+/* Layout: one narrow working column; population card, then numbered parts (one sample, many samples, compare n) */
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #1d2430;
+  --muted: #5b6575;
+  --rule: #d9dee6;
+  --soft: #eef1f5;
+  --hit: #3c78d8;
+  --miss: #d1495b;
+  --gold: #f1c232;
+  --gold-soft: #fdf3cf;
+  --gold-ink: #6b5200;
+  --fail: #9aa3b2;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --panel: #1a2029; --ink: #e8ecf2; --muted: #a2acbb; --rule: #2e3643; --soft: #222a35;
+    --hit: #78a6f0; --miss: #f07a8a; --gold: #f1c232; --gold-soft: #3a3214; --gold-ink: #f6d877; --fail: #6c7686;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1a2029; --ink: #e8ecf2; --muted: #a2acbb; --rule: #2e3643; --soft: #222a35;
+  --hit: #78a6f0; --miss: #f07a8a; --gold: #f1c232; --gold-soft: #3a3214; --gold-ink: #f6d877; --fail: #6c7686;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1rem; line-height: 1.45; }
+.wrap { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 18px; }
+header h1 { font-family: var(--display); font-weight: 700; font-size: clamp(1.9rem, 5vw, 2.6rem); line-height: 1.05; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 65ch; }
+.label { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .82rem; color: var(--muted); }
+section.part { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.part h2 { font-family: var(--display); font-weight: 700; font-size: 1.45rem; margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.part h2 .num { font-size: .95rem; color: var(--gold-ink); background: var(--gold-soft); border: 1px solid var(--gold); border-radius: 999px; padding: 0 9px; }
+.part > p { margin: 0; max-width: 70ch; }
+.settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+select, input[type=number] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; width: 100%; }
+select:focus-visible, input:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.src { font-size: .85rem; color: var(--muted); margin: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font-family: var(--display); font-weight: 600; font-size: 1.02rem; letter-spacing: .03em; border-radius: 6px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--ink); background: var(--ink); color: var(--panel); }
+button.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+button:hover { filter: brightness(1.12); }
+button.ghost:hover { background: var(--soft); filter: none; }
+.grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.grid i { width: var(--cell, 12px); height: var(--cell, 12px); border-radius: 2px; background: var(--soft); border: 1px solid var(--rule); display: block; }
+.grid i.s { background: var(--gold); border-color: var(--gold); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .9rem; color: var(--muted); align-items: center; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px 28px; font-variant-numeric: tabular-nums; }
+.stat b { display: block; font-family: var(--display); font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.steps { display: grid; gap: 8px; }
+.step { border: 1px solid var(--rule); border-left: 4px solid var(--gold); border-radius: 6px; padding: 10px 12px; background: var(--soft); display: grid; gap: 6px; min-width: 0; }
+.step .top { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.step .top strong { font-family: var(--display); font-size: 1.12rem; font-weight: 600; }
+.step .ans { font-variant-numeric: tabular-nums; overflow-x: auto; }
+.step .ans p { margin: 2px 0; }
+.step button { font-size: .9rem; padding: 4px 10px; }
+.hl { background: var(--gold-soft); border-bottom: 2px solid var(--gold); padding: 0 3px; font-weight: 600; white-space: nowrap; }
+.ok { color: var(--hit); font-weight: 600; }
+.bad { color: var(--miss); font-weight: 600; }
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; font-size: .92em; line-height: 1.15; margin: 0 2px; }
+.frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px; }
+.rad { border-top: 1px solid currentColor; padding: 0 2px; display: inline-block; line-height: 1.2; }
+.rad .frac > span:first-child { padding-top: .35em; }
+.chartbox { overflow-x: auto; }
+svg text { font-family: var(--body); fill: var(--muted); font-size: 12px; }
+svg .ptext { fill: var(--ink); font-weight: 600; }
+.note { font-size: .9rem; color: var(--muted); margin: 0; }
+.tally { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: end; font-variant-numeric: tabular-nums; }
+.tally .big { font-family: var(--display); font-size: 2.1rem; font-weight: 700; line-height: 1; }
+.tally .big.hit { color: var(--hit); }
+.tally .big.miss { color: var(--miss); }
+.qs { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 70ch; }
+.oneline { margin: 0; }
+.ph { position: relative; display: inline-block; font-style: italic; text-transform: none; line-height: 1; padding-right: .04em; }
+.ph::before { content: "\02C6"; position: absolute; left: 50%; top: -.26em; transform: translateX(-42%); font-style: normal; font-size: .95em; line-height: 1; }
+sub .ph::before { top: -.24em; }
+.zsvg { display: block; width: 100%; max-width: 380px; height: auto; margin-top: 6px; }
+.mini { overflow-x: auto; }
+.mini table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .95rem; min-width: 100%; }
+.mini th { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .8rem; color: var(--muted); text-align: right; padding: 6px 10px; border-bottom: 2px solid var(--ink); background: var(--gold-soft); white-space: nowrap; }
+.mini td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.mini th:first-child, .mini td:first-child { text-align: left; }
+[hidden] { display: none !important; }
+.picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.picker button { font-size: .92rem; padding: 4px 10px; min-width: 2.8em; }
+.picker button[aria-pressed="false"] { background: transparent; color: var(--ink); border-color: var(--rule); }
+.picker button.done { box-shadow: inset 0 -3px 0 var(--hit); }
+.picker .sep { width: 1px; background: var(--rule); margin: 0 4px; }
+.prompt { font-size: 1.15rem; line-height: 1.5; }
+.prompt .tag { font-family: var(--display); font-weight: 700; color: var(--gold-ink); background: var(--gold-soft); border: 1px solid var(--gold); border-radius: 999px; padding: 0 9px; margin-right: 8px; font-size: .95rem; }
+.ansrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 1.05rem; }
+.ansrow input[type=text] { font: inherit; width: 7.5em; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 6px; background: var(--panel); color: var(--ink); font-variant-numeric: tabular-nums; }
+.ansrow select { font: inherit; padding: 6px 8px; }
+.fb { border-radius: 8px; padding: 8px 12px; font-size: 1rem; }
+.fb.ok { background: color-mix(in srgb, var(--hit) 14%, transparent); border: 1px solid var(--hit); color: var(--ink); }
+.fb.no { background: color-mix(in srgb, var(--miss) 12%, transparent); border: 1px solid var(--miss); color: var(--ink); }
+.proc { display: grid; gap: 12px; }
+.proc ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
+.tbl { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--rule); border-radius: 8px; }
+.tbl table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .88rem; min-width: 100%; }
+.tbl th, .tbl td { padding: 4px 7px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.tbl th { font-family: var(--display); font-weight: 600; background: var(--soft); }
+.tbl th.rh { text-align: left; position: sticky; left: 0; z-index: 1; }
+.tbl tr.hdr th { background: var(--gold-soft); }
+.tbl .hl { background: var(--gold) !important; color: #1d2430; font-weight: 700; }
+.tbl .hl2 { background: var(--gold-soft) !important; outline: 2px solid var(--gold); outline-offset: -2px; }
+.tbl .ans { background: var(--hit) !important; color: #fff; font-weight: 700; }
+.tbl .dim { color: var(--muted); }
+.tbl caption { caption-side: top; text-align: left; padding: 6px 8px; font-size: .88rem; color: var(--muted); }
+.key { font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.key i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+.score { font-family: var(--display); font-weight: 700; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="label">MthStat 215 · Test 2 review</div>
+    <h1>z- and t-Table Practice</h1>
+    <p>Pick a problem, type your answer, and check it. After you check, you'll see the shaded model and the part of the table where the answer comes from.</p>
+  </header>
+
+  <section class="part" aria-label="Choose a problem">
+    <div class="label">Problems from the review notes <span class="score" id="score"></span></div>
+    <div class="picker" id="picker" role="group" aria-label="Problem"></div>
+    <div class="label" style="margin-top:4px">More practice (new random problem each click)</div>
+    <div class="picker" id="randpick" role="group" aria-label="Random problem">
+      <button type="button" data-r="zf" aria-pressed="false">z: area</button>
+      <button type="button" data-r="zb" aria-pressed="false">z: critical value</button>
+      <button type="button" data-r="tf" aria-pressed="false">t: bracket p-value</button>
+      <button type="button" data-r="tb" aria-pressed="false">t: critical value</button>
+    </div>
+  </section>
+
+  <section class="part" aria-live="polite">
+    <div class="prompt" id="prompt"></div>
+    <div class="ansrow" id="ansrow"></div>
+    <div class="row">
+      <button type="button" id="check">Check</button>
+      <button type="button" id="reveal" class="ghost">Show me how</button>
+    </div>
+    <div class="fb" id="fb" hidden></div>
+    <div class="proc" id="proc" hidden>
+      <div><div class="label" style="margin-bottom:4px">The process</div><ol id="steps"></ol></div>
+      <div class="chartbox"><svg id="plot" role="img" aria-label="Shaded model"></svg></div>
+      <div class="key" id="key"></div>
+      <div class="tbl" id="tbl"></div>
+    </div>
+  </section>
+  <p class="src">The z-table gives the area to the <b>left</b> of z. The t-table matches the course table: rows df = 1–30, 40, 60, 80, 100, 1000 and z; if your df is not listed, use the next smaller df.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var TT = {"rows": [[1, [0.0, 1.0, 1.376, 1.963, 3.078, 6.314, 12.71, 31.82, 63.66, 318.31, 636.62]], [2, [0.0, 0.816, 1.061, 1.386, 1.886, 2.92, 4.303, 6.965, 9.925, 22.327, 31.599]], [3, [0.0, 0.765, 0.978, 1.25, 1.638, 2.353, 3.182, 4.541, 5.841, 10.215, 12.924]], [4, [0.0, 0.741, 0.941, 1.19, 1.533, 2.132, 2.776, 3.747, 4.604, 7.173, 8.61]], [5, [0.0, 0.727, 0.92, 1.156, 1.476, 2.015, 2.571, 3.365, 4.032, 5.893, 6.869]], [6, [0.0, 0.718, 0.906, 1.134, 1.44, 1.943, 2.447, 3.143, 3.707, 5.208, 5.959]], [7, [0.0, 0.711, 0.896, 1.119, 1.415, 1.895, 2.365, 2.998, 3.499, 4.785, 5.408]], [8, [0.0, 0.706, 0.889, 1.108, 1.397, 1.86, 2.306, 2.896, 3.355, 4.501, 5.041]], [9, [0.0, 0.703, 0.883, 1.1, 1.383, 1.833, 2.262, 2.821, 3.25, 4.297, 4.781]], [10, [0.0, 0.7, 0.879, 1.093, 1.372, 1.812, 2.228, 2.764, 3.169, 4.144, 4.587]], [11, [0.0, 0.697, 0.876, 1.088, 1.363, 1.796, 2.201, 2.718, 3.106, 4.025, 4.437]], [12, [0.0, 0.695, 0.873, 1.083, 1.356, 1.782, 2.179, 2.681, 3.055, 3.93, 4.318]], [13, [0.0, 0.694, 0.87, 1.079, 1.35, 1.771, 2.16, 2.65, 3.012, 3.852, 4.221]], [14, [0.0, 0.692, 0.868, 1.076, 1.345, 1.761, 2.145, 2.624, 2.977, 3.787, 4.14]], [15, [0.0, 0.691, 0.866, 1.074, 1.341, 1.753, 2.131, 2.602, 2.947, 3.733, 4.073]], [16, [0.0, 0.69, 0.865, 1.071, 1.337, 1.746, 2.12, 2.583, 2.921, 3.686, 4.015]], [17, [0.0, 0.689, 0.863, 1.069, 1.333, 1.74, 2.11, 2.567, 2.898, 3.646, 3.965]], [18, [0.0, 0.688, 0.862, 1.067, 1.33, 1.734, 2.101, 2.552, 2.878, 3.61, 3.922]], [19, [0.0, 0.688, 0.861, 1.066, 1.328, 1.729, 2.093, 2.539, 2.861, 3.579, 3.883]], [20, [0.0, 0.687, 0.86, 1.064, 1.325, 1.725, 2.086, 2.528, 2.845, 3.552, 3.85]], [21, [0.0, 0.686, 0.859, 1.063, 1.323, 1.721, 2.08, 2.518, 2.831, 3.527, 3.819]], [22, [0.0, 0.686, 0.858, 1.061, 1.321, 1.717, 2.074, 2.508, 2.819, 3.505, 3.792]], [23, [0.0, 0.685, 0.858, 1.06, 1.319, 1.714, 2.069, 2.5, 2.807, 3.485, 3.768]], [24, [0.0, 0.685, 0.857, 1.059, 1.318, 1.711, 2.064, 2.492, 2.797, 3.467, 3.745]], [25, [0.0, 0.684, 0.856, 1.058, 1.316, 1.708, 2.06, 2.485, 2.787, 3.45, 3.725]], [26, [0.0, 0.684, 0.856, 1.058, 1.315, 1.706, 2.056, 2.479, 2.779, 3.435, 3.707]], [27, [0.0, 0.684, 0.855, 1.057, 1.314, 1.703, 2.052, 2.473, 2.771, 3.421, 3.69]], [28, [0.0, 0.683, 0.855, 1.056, 1.313, 1.701, 2.048, 2.467, 2.763, 3.408, 3.674]], [29, [0.0, 0.683, 0.854, 1.055, 1.311, 1.699, 2.045, 2.462, 2.756, 3.396, 3.659]], [30, [0.0, 0.683, 0.854, 1.055, 1.31, 1.697, 2.042, 2.457, 2.75, 3.385, 3.646]], [40, [0.0, 0.681, 0.851, 1.05, 1.303, 1.684, 2.021, 2.423, 2.704, 3.307, 3.551]], [60, [0.0, 0.679, 0.848, 1.045, 1.296, 1.671, 2.0, 2.39, 2.66, 3.232, 3.46]], [80, [0.0, 0.678, 0.846, 1.043, 1.292, 1.664, 1.99, 2.374, 2.639, 3.195, 3.416]], [100, [0.0, 0.677, 0.845, 1.042, 1.29, 1.66, 1.984, 2.364, 2.626, 3.174, 3.39]], [1000, [0.0, 0.675, 0.842, 1.037, 1.282, 1.646, 1.962, 2.33, 2.581, 3.098, 3.3]]], "z": [0.0, 0.674, 0.842, 1.036, 1.282, 1.645, 1.96, 2.326, 2.576, 3.09, 3.291]};
+  var CUM = [.50, .75, .80, .85, .90, .95, .975, .99, .995, .999, .9995];
+  var ONE = [0.50, 0.25, 0.20, 0.15, 0.10, 0.05, 0.025, 0.01, 0.005, 0.001, 0.0005];
+  var TWO = [1.00, 0.50, 0.40, 0.30, 0.20, 0.10, 0.05, 0.02, 0.01, 0.002, 0.001];
+  var CONF = ["0%", "50%", "60%", "70%", "80%", "90%", "95%", "98%", "99%", "99.8%", "99.9%"];
+  var CONFV = [0, 50, 60, 70, 80, 90, 95, 98, 99, 99.8, 99.9];
+  var DFL = TT.rows.map(function (r) { return r[0]; });
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------- math ----------
+  function lgamma(x) {
+    var c = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    var y = x, tmp = x + 5.5; tmp -= (x + 0.5) * Math.log(tmp);
+    var ser = 1.000000000190015; for (var j = 0; j < 6; j++) ser += c[j] / ++y;
+    return -tmp + Math.log(2.5066282746310005 * ser / x);
+  }
+  function betacf(a, b, x) {
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < 1e-300) d = 1e-300; d = 1 / d; var h = d;
+    for (var m = 1; m <= 300; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < 1e-300) d = 1e-300; c = 1 + aa / c; if (Math.abs(c) < 1e-300) c = 1e-300; d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < 1e-300) d = 1e-300; c = 1 + aa / c; if (Math.abs(c) < 1e-300) c = 1e-300; d = 1 / d;
+      var del = d * c; h *= del; if (Math.abs(del - 1) < 1e-12) break;
+    }
+    return h;
+  }
+  function ibeta(a, b, x) {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
+  }
+  function tupper(t, v) { var x = v / (v + t * t), p = 0.5 * ibeta(v / 2, 0.5, x); return t >= 0 ? p : 1 - p; }
+  function tpdf(t, v) { return Math.exp(lgamma((v + 1) / 2) - lgamma(v / 2)) / Math.sqrt(v * Math.PI) * Math.pow(1 + t * t / v, -(v + 1) / 2); }
+  function zpdf(z) { return Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI); }
+  function erfc(x) { var z = Math.abs(x), t = 1 / (1 + z / 2), r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277))))))))); return x >= 0 ? r : 2 - r; }
+  function zq(p) { var lo = -8, hi = 8; for (var k = 0; k < 100; k++) { var m = (lo + hi) / 2; if (Phi(m) < p) lo = m; else hi = m; } return (lo + hi) / 2; }
+  function Phi(z) { return 0.5 * erfc(-z / Math.SQRT2); }
+  function P4(z) { return Math.round(Phi(z) * 10000) / 10000; }   // table value
+  function r2(x) { return Math.round(x * 100) / 100; }
+
+  function fmtT(df, v) { return (df === 1 && v >= 10) ? v.toFixed(2) : v.toFixed(3); }
+  function fA(a) { var t = (+a.toFixed(4)).toString(); if (t.indexOf(".") < 0) t += ".00"; else if (t.split(".")[1].length < 2) t += "0"; return t; }
+  var CUMS = [".50", ".75", ".80", ".85", ".90", ".95", ".975", ".99", ".995", ".999", ".9995"];
+  function f4(a) { return a.toFixed(4); }
+  function rowFor(df) { var r = DFL[0]; DFL.forEach(function (d) { if (d <= df) r = d; }); return r; }
+  function rowVals(row) { for (var i = 0; i < TT.rows.length; i++) if (TT.rows[i][0] === row) return TT.rows[i][1]; return TT.z; }
+  function num(s) { s = String(s || "").replace(/[−–]/g, "-").replace(/,/g, "").trim(); if (s === "") return NaN; if (/^-?\.?\d/.test(s) || /^-?\d/.test(s)) return parseFloat(s); return NaN; }
+
+  // ---------- problems ----------
+  function zf(id, z, tail, text) { return { id: id, kind: "zf", z: z, tail: tail, text: text }; }
+  function zb(id, mode, val, text) { return { id: id, kind: "zb", mode: mode, val: val, text: text }; }
+  function tf(id, t, df, alt) { return { id: id, kind: "tf", t: t, df: df, alt: alt }; }
+  function tb(id, C, n) { return { id: id, kind: "tb", C: C, n: n }; }
+  var FIXED = [
+    zf("Z1", 1.47, "upper"), zf("Z2", -2.15, "two"), zb("Z3", "conf", 98), zb("Z4", "upper", 0.03),
+    tf("T1", 2.40, 11, "two"), tf("T2", 1.20, 24, "upper"), tf("T3", -4.90, 8, "lower"), tf("T4", -1.85, 30, "upper"),
+    tb("T5", 95, 36), tb("T6", 99, 10), tb("T7", 90, 61)
+  ];
+  function ri(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+  var RAND = {
+    zf: function () { var tail = pick(["upper", "lower", "two"]); var z = r2((Math.random() < 0.5 ? -1 : 1) * (0.2 + Math.random() * 2.79)); if (tail === "two") z = -Math.abs(z) * (Math.random() < 0.5 ? 1 : -1); return zf("New", z, tail); },
+    zb: function () { return Math.random() < 0.5 ? zb("New", "conf", pick([80, 85, 88, 90, 92, 94, 95, 96, 97, 98, 99])) : zb("New", pick(["upper", "lower"]), pick([0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.08, 0.10, 0.12, 0.15, 0.20])); },
+    tf: function () {
+      var df = pick([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 19, 21, 24, 27, 29, 30, 35, 44, 49, 59, 75, 99, 120]);
+      var vals = rowVals(rowFor(df)), j = ri(2, 9), lo = vals[j], hi = vals[j + 1], t = r2(lo + (0.15 + 0.7 * Math.random()) * (hi - lo));
+      if (t <= lo || t >= hi) t = r2((lo + hi) / 2);
+      var alt = pick(["upper", "lower", "two"]), sgn = alt === "lower" ? -1 : 1;
+      if (alt === "two") sgn = Math.random() < 0.5 ? -1 : 1;
+      if (Math.random() < 0.12 && alt !== "two") sgn = -sgn;   // occasionally points the wrong way
+      return tf("New", sgn * t, df, alt);
+    },
+    tb: function () { return tb("New", pick([80, 90, 95, 98, 99, 99.8]), pick([5, 8, 10, 12, 15, 18, 21, 25, 31, 36, 41, 50, 61, 75, 101])); }
+  };
+
+  // ---------- solve ----------
+  function solve(p) {
+    var s = {};
+    if (p.kind === "zf") {
+      var z = p.z, a = Math.abs(z);
+      if (p.tail === "upper") { s.look = z; s.tab = P4(z); s.ans = 1 - s.tab; }
+      else if (p.tail === "lower") { s.look = z; s.tab = P4(z); s.ans = s.tab; }
+      else { s.look = -a; s.tab = P4(-a); s.ans = 2 * s.tab; }
+      s.ans = Math.round(s.ans * 10000) / 10000;
+    } else if (p.kind === "zb") {
+      var target = p.mode === "conf" ? 1 - (1 - p.val / 100) / 2 : p.mode === "upper" ? 1 - p.val : p.val;
+      s.target = Math.round(target * 10000) / 10000;
+      var best = null, bd = 9;
+      var tie = null;
+      for (var k = -349; k <= 349; k++) { var zz = k / 100, d = Math.abs(P4(zz) - target); if (d < bd - 1e-9) { bd = d; best = zz; tie = null; } else if (Math.abs(d - bd) < 1e-9) tie = zz; }
+      s.exact = zq(target); s.tab = P4(best);
+      if (tie !== null) { s.tie = [best, tie]; s.ans = Math.round((best + tie) / 2 * 1000) / 1000; } else s.ans = best;
+    } else if (p.kind === "tf") {
+      s.row = rowFor(p.df); s.vals = rowVals(s.row);
+      var wrong = (p.alt === "upper" && p.t < 0) || (p.alt === "lower" && p.t > 0);
+      var areas = p.alt === "two" ? TWO : ONE, at = Math.abs(p.t);
+      s.areas = areas; s.useRow = p.alt === "two" ? "two" : "one";
+      if (wrong) { s.wrong = true; s.ans = { rel: "greater", v: 0.5 }; }
+      else if (at >= s.vals[10]) { s.j = 10; s.ans = { rel: "less", v: areas[10] }; }
+      else { var j = 0; for (var i = 0; i < 11; i++) if (s.vals[i] <= at) j = i; s.j = j; s.ans = { rel: "between", lo: areas[j + 1], hi: areas[j] }; }
+      s.exact = p.alt === "two" ? 2 * tupper(at, p.df) : tupper(p.alt === "upper" ? p.t : -p.t, p.df);
+    } else {
+      s.df = p.n - 1; s.row = rowFor(s.df); s.col = CONFV.indexOf(p.C); s.ans = rowVals(s.row)[s.col];
+    }
+    return s;
+  }
+
+  // ---------- text ----------
+  function altTxt(p) { return p.alt === "two" ? "H<sub>1</sub>: μ ≠ μ<sub>0</sub>" : p.alt === "upper" ? "H<sub>1</sub>: μ &gt; μ<sub>0</sub>" : "H<sub>1</sub>: μ &lt; μ<sub>0</sub>"; }
+  function zs(z) { return (z < 0 ? "−" : "") + Math.abs(z).toFixed(2); }
+  function promptHTML(p) {
+    var tag = '<span class="tag">' + p.id + "</span>";
+    if (p.kind === "zf") return tag + (p.tail === "upper" ? "Find P(Z &gt; " + zs(p.z) + ")." : p.tail === "lower" ? "Find P(Z &lt; " + zs(p.z) + ")." : "Find the two-sided p-value for z = " + zs(p.z) + ".");
+    if (p.kind === "zb") return tag + (p.mode === "conf" ? "Find z<sub>c</sub> for a " + p.val + "% confidence interval." : p.mode === "upper" ? "Find the z-score with an upper-tail area of " + p.val.toFixed(2) + "." : "Find the z-score with a lower-tail area of " + p.val.toFixed(2) + ".");
+    if (p.kind === "tf") return tag + "Bracket the p-value: t = " + zs(p.t) + ", df = " + p.df + ", " + altTxt(p) + ".";
+    return tag + "Find t<sub>c</sub> for " + p.C + "% confidence with n = " + p.n + ".";
+  }
+  function ansHTML(p, s) {
+    if (p.kind === "zf") return "<b>" + f4(s.ans) + "</b>";
+    if (p.kind === "zb") return "<b>z = " + (s.tie ? (s.ans < 0 ? "−" : "") + Math.abs(s.ans).toFixed(3) : zs(s.ans)) + "</b>" + (!s.tie && Math.abs(s.exact - s.ans) > 0.002 ? " (software: " + (s.exact < 0 ? "−" : "") + Math.abs(s.exact).toFixed(3) + ")" : "");
+    if (p.kind === "tf") { var a = s.ans; return "<b>" + (a.rel === "between" ? fA(a.lo) + " &lt; p-value &lt; " + fA(a.hi) : a.rel === "less" ? "p-value &lt; " + fA(a.v) : "p-value &gt; " + fA(a.v)) + "</b>"; }
+    return "<b>t<sub>c</sub> = " + fmtT(s.row, s.ans) + "</b>";
+  }
+
+  // ---------- inputs ----------
+  function buildInputs(p) {
+    var h;
+    if (p.kind === "tf") {
+      h = '<label for="rel">p-value is</label><select id="rel"><option value="between">between</option><option value="less">less than</option><option value="greater">greater than</option></select>' +
+        '<input type="text" inputmode="decimal" id="a1" aria-label="first value" placeholder="0.00"><span id="andw">and</span><input type="text" inputmode="decimal" id="a2" aria-label="second value" placeholder="0.00">';
+    } else {
+      var lab = p.kind === "zf" ? "Area =" : p.kind === "zb" ? "z =" : "t<sub>c</sub> =";
+      h = '<label for="a1">' + lab + '</label><input type="text" inputmode="decimal" id="a1" placeholder="' + (p.kind === "zf" ? "0.0000" : "0.00") + '">';
+    }
+    $("ansrow").innerHTML = h;
+    if (p.kind === "tf") { $("rel").addEventListener("change", function () { var b = this.value === "between"; $("a2").hidden = !b; $("andw").hidden = !b; }); }
+    [].forEach.call($("ansrow").querySelectorAll("input"), function (el) { el.addEventListener("keydown", function (e) { if (e.key === "Enter") check(); }); });
+  }
+  function grade(p, s) {
+    var a1 = num(($("a1") || {}).value);
+    if (p.kind === "zf") { if (isNaN(a1)) return null; return Math.abs(a1 - s.ans) <= 0.00025; }
+    if (p.kind === "zb") { if (isNaN(a1)) return null; return Math.abs(a1 - s.exact) <= 0.011 || Math.abs(a1 - s.ans) < 0.0001; }
+    if (p.kind === "tb") { if (isNaN(a1)) return null; return Math.abs(a1 - s.ans) <= 0.0015; }
+    var rel = $("rel").value, a2 = num($("a2").value), A = s.ans;
+    if (isNaN(a1) || (rel === "between" && isNaN(a2))) return null;
+    if (rel !== A.rel) return false;
+    if (rel === "between") { var lo = Math.min(a1, a2), hi = Math.max(a1, a2); return Math.abs(lo - A.lo) < 1e-6 && Math.abs(hi - A.hi) < 1e-6; }
+    return Math.abs(a1 - A.v) < 1e-6;
+  }
+
+  // ---------- process: steps ----------
+  function steps(p, s) {
+    var L = [];
+    if (p.kind === "zf") {
+      var a = Math.abs(p.z);
+      L.push("Sketch the standard Normal curve and shade the area you want (see the picture).");
+      if (p.tail === "two") {
+        L.push("A two-sided p-value counts both tails beyond ±" + a.toFixed(2) + ". By symmetry, find one tail and double it.");
+        L.push("Look up z = " + zs(-a) + " in the z-table: row " + rowLabel(-a) + ", column " + colLabel(-a) + " gives the area to the left, <b>" + f4(s.tab) + "</b>.");
+        L.push("p-value = 2 × " + f4(s.tab) + " = <b>" + f4(s.ans) + "</b>.");
+      } else {
+        L.push("Look up z = " + zs(p.z) + " in the z-table: row " + rowLabel(p.z) + ", column " + colLabel(p.z) + " gives the area to the <b>left</b>, " + f4(s.tab) + ".");
+        L.push(p.tail === "upper" ? "We want the area to the right, so subtract from 1: 1 − " + f4(s.tab) + " = <b>" + f4(s.ans) + "</b>." : "We want the area to the left, so the table value is the answer: <b>" + f4(s.ans) + "</b>.");
+      }
+    } else if (p.kind === "zb") {
+      if (p.mode === "conf") {
+        var tl = (100 - p.val) / 200;
+        L.push("A " + p.val + "% interval puts " + p.val + "% in the middle, so each tail has (1 − " + (p.val / 100) + ")/2 = " + fA(tl) + ".");
+        L.push("The z-table gives areas to the left, so look for 1 − " + fA(tl) + " = <b>" + f4(s.target) + "</b> inside the table.");
+      } else if (p.mode === "upper") {
+        L.push("An upper-tail area of " + p.val.toFixed(2) + " means an area of 1 − " + p.val.toFixed(2) + " = <b>" + f4(s.target) + "</b> to the left.");
+        L.push("Look for " + f4(s.target) + " inside the z-table (this time we search the areas, not the z-scores).");
+      } else {
+        L.push("A lower-tail area of " + p.val.toFixed(2) + " is already an area to the left. Look for <b>" + f4(s.target) + "</b> inside the z-table.");
+      }
+      if (s.tie) L.push(f4(s.target) + " is exactly halfway between " + f4(P4(s.tie[0])) + " (z = " + zs(s.tie[0]) + ") and " + f4(P4(s.tie[1])) + " (z = " + zs(s.tie[1]) + "), so use the midpoint: z = <b>" + (s.ans < 0 ? "−" : "") + Math.abs(s.ans).toFixed(3) + "</b>.");
+      else L.push("The closest area is " + f4(s.tab) + ", in row " + rowLabel(s.ans) + " and column " + colLabel(s.ans) + ", so z = <b>" + zs(s.ans) + "</b>.");
+      if (p.mode === "conf" && [90, 95, 98, 99].indexOf(p.val) >= 0) L.push("Check: the z row of the t-table lists z<sub>c</sub> = " + { 90: "1.645", 95: "1.960", 98: "2.326", 99: "2.576" }[p.val] + " for " + p.val + "% confidence.");
+    } else if (p.kind === "tf") {
+      L.push("df = " + p.df + (s.row === p.df ? ", which is a row in the t-table." : " is not in the table, so use the next smaller row: <b>df = " + s.row + "</b>."));
+      if (s.wrong) {
+        L.push("Check the direction first: " + altTxt(p) + " looks for " + (p.alt === "upper" ? "large positive" : "large negative") + " t-values, but t = " + zs(p.t) + " points the other way.");
+        L.push("The shaded area is more than half the curve, so the <b>p-value &gt; 0.5</b>. There is no evidence for H<sub>1</sub>; no table lookup is needed.");
+      } else {
+        L.push(p.alt === "two" ? "Two-sided H<sub>1</sub>: use |t| = " + Math.abs(p.t).toFixed(2) + " and read the <b>two-tails</b> row." : "One-sided H<sub>1</sub>, and t points in its direction: use |t| = " + Math.abs(p.t).toFixed(2) + " and read the <b>one-tail</b> row.");
+        if (s.j === 10) L.push("|t| is larger than every entry in the row (largest is " + fmtT(s.row, s.vals[10]) + "), so the p-value is less than the last area: <b>p-value &lt; " + fA(s.areas[10]) + "</b>.");
+        else {
+          L.push("In row " + s.row + ", " + fmtT(s.row, s.vals[s.j]) + " &lt; " + Math.abs(p.t).toFixed(2) + " &lt; " + fmtT(s.row, s.vals[s.j + 1]) + ".");
+          L.push("Those columns have " + (p.alt === "two" ? "two-tails" : "one-tail") + " areas " + fA(s.areas[s.j]) + " and " + fA(s.areas[s.j + 1]) + ", so <b>" + fA(s.areas[s.j + 1]) + " &lt; p-value &lt; " + fA(s.areas[s.j]) + "</b>.");
+        }
+      }
+      L.push("<span class='dim'>(Software would give the exact p-value ≈ " + (s.exact < 0.0001 ? s.exact.toExponential(1) : s.exact.toFixed(4)) + ", which is inside the bracket.)</span>");
+    } else {
+      L.push("df = n − 1 = " + s.df + (s.row === s.df ? "." : ". That row is not in the table, so use the next smaller row: <b>df = " + s.row + "</b>."));
+      L.push("Find " + p.C + "% in the <b>Confidence level</b> row at the bottom of the table. That column is two-tails " + fA(TWO[s.col]) + ", one-tail " + fA(ONE[s.col]) + ", t<sub>" + CUMS[s.col] + "</sub>.");
+      L.push("Where row " + s.row + " meets that column: <b>t<sub>c</sub> = " + fmtT(s.row, s.ans) + "</b>. (Compare z<sub>c</sub> = " + TT.z[s.col].toFixed(3) + ": t<sub>c</sub> is a bit larger.)");
+    }
+    return L;
+  }
+  function rowLabel(z) { var a = Math.abs(z), r = Math.floor(Math.round(a * 100) / 10) / 10; return (z < 0 ? "−" : "") + r.toFixed(1); }
+  function colLabel(z) { var a = Math.round(Math.abs(z) * 100); return "0.0" + (a % 10); }
+
+  // ---------- process: curve ----------
+  function curve(p, s) {
+    var isT = p.kind === "tf" || p.kind === "tb", df = p.kind === "tf" ? p.df : p.kind === "tb" ? s.df : 0;
+    var f = isT ? function (u) { return tpdf(u, df); } : zpdf;
+    var ext = 4;
+    if (p.kind === "tf") ext = Math.max(4, Math.min(7, Math.abs(p.t) + 1));
+    if (p.kind === "tb") ext = Math.max(4, Math.min(7, s.ans + 1));
+    var svg = $("plot"), w = Math.max(svg.parentNode.clientWidth, 300), H = Math.round(Math.max(170, Math.min(260, w * 0.36)));
+    var pl = 12, pr = 12, pt = 30, pb = 30, lo = -ext, hi = ext, ymax = 0.42;
+    var x = function (u) { return pl + (u - lo) / (hi - lo) * (w - pl - pr); };
+    var y = function (d) { return H - pb - d / ymax * (H - pt - pb); };
+    var o = [];
+    function path(a, b) { var q = [], n = 200; for (var k = 0; k <= n; k++) { var u = a + (b - a) * k / n; q.push(x(u).toFixed(1) + "," + y(f(u)).toFixed(1)); } return q.join(" "); }
+    function shade(a, b) { a = Math.max(a, lo); b = Math.min(b, hi); if (b <= a) return; o.push('<polygon points="' + x(a).toFixed(1) + "," + y(0) + " " + path(a, b) + " " + x(b).toFixed(1) + "," + y(0) + '" fill="var(--hit)" fill-opacity="0.4"/>'); }
+    function mark(u, label, dash, above, lvl) { if (u < lo || u > hi) return; var ly = above ? pt - 10 : pt + 8 + 13 * (lvl || 0); o.push('<line x1="' + x(u) + '" x2="' + x(u) + '" y1="' + (ly + 4) + '" y2="' + y(0) + '" stroke="' + (dash ? "var(--muted)" : "var(--ink)") + '" stroke-width="1.4"' + (dash ? ' stroke-dasharray="4 3"' : "") + '/><text x="' + x(u) + '" y="' + ly + '" text-anchor="middle" style="font-size:12px"' + (dash ? ' fill="var(--muted)"' : "") + ">" + label + "</text>"); }
+    var areaLbl = "";
+    if (p.kind === "zf") {
+      var a = Math.abs(p.z);
+      if (p.tail === "upper") { shade(p.z, hi); mark(p.z, "z = " + zs(p.z), false, true); areaLbl = "shaded area = " + f4(s.ans); }
+      else if (p.tail === "lower") { shade(lo, p.z); mark(p.z, "z = " + zs(p.z), false, true); areaLbl = "shaded area = " + f4(s.ans); }
+      else { shade(lo, -a); shade(a, hi); mark(-a, "−" + a.toFixed(2), false, true); mark(a, a.toFixed(2), false, true); areaLbl = "each tail = " + f4(s.tab) + ", total = " + f4(s.ans); }
+    } else if (p.kind === "zb") {
+      var z = s.ans;
+      if (p.mode === "conf") { shade(-Math.abs(z), Math.abs(z)); mark(-Math.abs(z), "−" + Math.abs(z).toFixed(2), false, true); mark(Math.abs(z), Math.abs(z).toFixed(2), false, true); areaLbl = "middle area = " + p.val + "%"; }
+      else if (p.mode === "upper") { shade(z, hi); mark(z, "z = " + zs(z), false, true); areaLbl = "upper tail = " + p.val.toFixed(2) + " (area to the left = " + f4(s.target) + ")"; }
+      else { shade(lo, z); mark(z, "z = " + zs(z), false, true); areaLbl = "lower tail = " + p.val.toFixed(2); }
+    } else if (p.kind === "tf") {
+      var at = Math.abs(p.t);
+      if (p.alt === "two") { shade(lo, -at); shade(at, hi); }
+      else if (p.alt === "upper") shade(p.t, hi); else shade(lo, p.t);
+      mark(p.t, "t = " + zs(p.t), false, true);
+      if (p.alt === "two") mark(-p.t, zs(-p.t), false, true);
+      if (!s.wrong) {
+        var sg = p.alt === "lower" ? -1 : 1;
+        [s.j, s.j + 1].forEach(function (k, q) { if (k > 10 || k < 1) return; var v = s.vals[k]; mark(sg * v, fmtT(s.row, v), true, false, q); if (p.alt === "two") mark(-v, fmtT(s.row, v), true, false, q); });
+      }
+      areaLbl = s.wrong ? "shaded area is more than half the curve" : "shaded area = p-value; dashed lines = table values it falls between";
+    } else {
+      shade(-s.ans, s.ans); mark(-s.ans, "−" + fmtT(s.row, s.ans), false, true); mark(s.ans, fmtT(s.row, s.ans), false, true); areaLbl = "middle area = " + p.C + "%";
+    }
+    o.push('<polyline points="' + path(lo, hi) + '" fill="none" stroke="var(--ink)" stroke-width="2"/>');
+    o.push('<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="var(--ink)"/>');
+    for (var tk = Math.ceil(lo); tk <= hi; tk++) o.push('<text x="' + x(tk) + '" y="' + (y(0) + 16) + '" text-anchor="middle" style="font-size:11px" fill="var(--muted)">' + tk + "</text>");
+    svg.setAttribute("viewBox", "0 0 " + w + " " + H); svg.setAttribute("width", w); svg.setAttribute("height", H); svg.innerHTML = o.join("");
+    $("key").innerHTML = '<span><b>' + (isT ? "t-distribution, df = " + (p.kind === "tf" ? p.df : s.df) : "standard Normal (z)") + '</b></span><span><i style="background:var(--hit);opacity:.5"></i>' + areaLbl + "</span>";
+  }
+
+  // ---------- process: table segment ----------
+  function zTable(p, s) {
+    var zc = p.kind === "zf" ? s.look : s.ans, neg = zc < 0;
+    var a = Math.round(Math.abs(zc) * 100), r0 = Math.floor(a / 10), col = a % 10;
+    var rows = []; for (var r = r0 - 2; r <= r0 + 2; r++) if (r >= 0 && r <= 34) rows.push(r);
+    var h = "<table><caption>Part of the z-table (area to the left of z). Row = first decimal, column = second decimal.</caption><tr class='hdr'><th class='rh'>z</th>";
+    for (var c = 0; c < 10; c++) h += "<th class='" + (c === col ? "hl" : "") + "'>0.0" + c + "</th>";
+    h += "</tr>";
+    rows.forEach(function (r) {
+      var lab = (neg ? "−" : "") + (r / 10).toFixed(1);
+      h += "<tr><th class='rh " + (r === r0 ? "hl" : "") + "'>" + lab + "</th>";
+      for (var c2 = 0; c2 < 10; c2++) {
+        var zz = (neg ? -1 : 1) * (r * 10 + c2) / 100, v = P4(zz), cls = "";
+        if (r === r0 && c2 === col) cls = "ans"; else if (r === r0 || c2 === col) cls = "hl2";
+        h += "<td class='" + cls + "'>" + f4(v) + "</td>";
+      }
+      h += "</tr>";
+    });
+    return h + "</table>";
+  }
+  function tTable(p, s) {
+    var row = s.row, idx = DFL.indexOf(row), list = [];
+    for (var k = Math.max(0, idx - 2); k <= Math.min(DFL.length - 1, idx + 2); k++) list.push(DFL[k]);
+    var hiCols = [], hdrRow = null, ansCells = [];
+    if (p.kind === "tf" && !s.wrong) { hdrRow = s.useRow; if (s.j === 10) { hiCols = [10]; ansCells = [10]; } else { hiCols = [s.j, s.j + 1]; ansCells = [s.j, s.j + 1]; } }
+    if (p.kind === "tb") { hiCols = [s.col]; ansCells = [s.col]; hdrRow = "conf"; }
+    function hc(i, which) { return hiCols.indexOf(i) >= 0 ? (hdrRow === which ? "hl" : "hl2") : ""; }
+    var h = "<table><caption>Part of the t-table" + (p.kind === "tf" && s.wrong ? " (not needed here: t points away from H₁)" : "") + "</caption>";
+    h += "<tr class='hdr'><th class='rh'>cum. prob</th>" + CUM.map(function (c, i) { return "<th class='" + (hiCols.indexOf(i) >= 0 ? "hl2" : "") + "'>t<sub>" + CUMS[i] + "</sub></th>"; }).join("") + "</tr>";
+    h += "<tr class='hdr'><th class='rh " + (hdrRow === "one" ? "hl" : "") + "'>one-tail</th>" + ONE.map(function (c, i) { return "<th class='" + hc(i, "one") + "'>" + fA(c) + "</th>"; }).join("") + "</tr>";
+    h += "<tr class='hdr'><th class='rh " + (hdrRow === "two" ? "hl" : "") + "'>two-tails</th>" + TWO.map(function (c, i) { return "<th class='" + hc(i, "two") + "'>" + fA(c) + "</th>"; }).join("") + "</tr>";
+    h += "<tr><th class='rh'>df</th><td colspan='11'></td></tr>";
+    list.forEach(function (d) {
+      var vals = rowVals(d);
+      h += "<tr><th class='rh " + (d === row ? "hl" : "") + "'>" + d + "</th>" + vals.map(function (v, i) {
+        var cls = d === row ? (ansCells.indexOf(i) >= 0 ? "ans" : "hl2") : (hiCols.indexOf(i) >= 0 ? "hl2" : "");
+        return "<td class='" + cls + "'>" + fmtT(d, v) + "</td>";
+      }).join("") + "</tr>";
+    });
+    h += "<tr><th class='rh'>z</th>" + TT.z.map(function (v, i) { return "<td class='" + (hiCols.indexOf(i) >= 0 ? "hl2" : "") + "'>" + v.toFixed(3) + "</td>"; }).join("") + "</tr>";
+    h += "<tr class='hdr'><th class='rh " + (hdrRow === "conf" ? "hl" : "") + "'>Confidence level</th>" + CONF.map(function (c, i) { return "<th class='" + hc(i, "conf") + "'>" + c + "</th>"; }).join("") + "</tr>";
+    return h + "</table>";
+  }
+
+  // ---------- state & UI ----------
+  var cur = null, sol = null, done = {};
+  function renderPicker() {
+    $("picker").innerHTML = FIXED.map(function (p, i) {
+      return (i === 4 ? "<span class='sep'></span>" : "") + '<button type="button" data-i="' + i + '" aria-pressed="' + (cur === p) + '" class="' + (done[p.id] ? "done" : "") + '">' + p.id + (done[p.id] === "ok" ? " ✓" : "") + "</button>";
+    }).join("");
+    var n = Object.keys(done).filter(function (k) { return done[k] === "ok"; }).length;
+    $("score").textContent = n ? "· " + n + " of " + FIXED.length + " correct" : "";
+  }
+  function load(p) {
+    cur = p; sol = solve(p);
+    $("prompt").innerHTML = promptHTML(p);
+    buildInputs(p);
+    $("fb").hidden = true; $("proc").hidden = true;
+    renderPicker();
+    [].forEach.call($("randpick").querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", String(p.id === "New" && b.getAttribute("data-r") === p.kind)); });
+  }
+  function showProc() {
+    $("steps").innerHTML = steps(cur, sol).map(function (x) { return "<li>" + x + "</li>"; }).join("");
+    $("tbl").innerHTML = (cur.kind === "zf" || cur.kind === "zb") ? zTable(cur, sol) : tTable(cur, sol);
+    $("proc").hidden = false; curve(cur, sol);
+    var a = $("tbl").querySelector(".ans"); if (a && a.scrollIntoView) { var box = $("tbl"); box.scrollLeft = Math.max(0, a.offsetLeft - box.clientWidth / 2); }
+  }
+  function check() {
+    var g = grade(cur, sol), fb = $("fb");
+    if (g === null) { fb.hidden = false; fb.className = "fb no"; fb.innerHTML = "Type a number" + (cur.kind === "tf" ? " in each box" : "") + " first."; return; }
+    fb.hidden = false; fb.className = "fb " + (g ? "ok" : "no");
+    fb.innerHTML = g ? "Correct! " + ansHTML(cur, sol) : "Not quite. The answer is " + ansHTML(cur, sol) + ". Walk through the process below.";
+    if (cur.id !== "New" && done[cur.id] !== "ok") done[cur.id] = g ? "ok" : "tried";
+    renderPicker(); showProc();
+  }
+  $("check").addEventListener("click", check);
+  $("reveal").addEventListener("click", function () { var fb = $("fb"); fb.hidden = false; fb.className = "fb no"; fb.innerHTML = "The answer is " + ansHTML(cur, sol) + "."; if (cur.id !== "New" && !done[cur.id]) done[cur.id] = "tried"; renderPicker(); showProc(); });
+  $("picker").addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (b) load(FIXED[+b.getAttribute("data-i")]); });
+  $("randpick").addEventListener("click", function (e) { var b = e.target.closest("button[data-r]"); if (b) load(RAND[b.getAttribute("data-r")]()); });
+  var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (!$("proc").hidden) curve(cur, sol); }, 120); });
+  load(FIXED[0]);
+})();
+</script>
+</body></html>
