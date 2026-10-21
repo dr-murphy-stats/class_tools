@@ -164,6 +164,28 @@ sub .ph::before { top: -.24em; }
       <div class="tbl" id="tbl"></div>
     </div>
   </section>
+
+  <section class="part" aria-label="Choose a standardizing problem">
+    <h2 style="margin:0">Part 2: Standardize first</h2>
+    <p style="margin:0">These models are not standard: each has its own mean and standard deviation (or standard error). Standardize to z or t, use the table, then convert back if the question asks for a value in the original units.</p>
+    <div class="picker" id="picker2" role="group" aria-label="Standardizing problem"></div>
+  </section>
+
+  <section class="part" aria-live="polite">
+    <div class="prompt" id="prompt2"></div>
+    <div class="ansrow" id="ansrow2"></div>
+    <div class="row">
+      <button type="button" id="check2">Check</button>
+      <button type="button" id="reveal2" class="ghost">Show me how</button>
+    </div>
+    <div class="fb" id="fb2" hidden></div>
+    <div class="proc" id="proc2" hidden>
+      <div><div class="label" style="margin-bottom:4px">The process</div><ol id="steps2"></ol></div>
+      <div class="chartbox"><svg id="plot2" role="img" aria-label="Shaded model with original and standardized scales"></svg></div>
+      <div class="key" id="key2"></div>
+      <div class="tbl" id="tbl2"></div>
+    </div>
+  </section>
   <p class="src">The z-table gives the area to the <b>left</b> of z. The t-table matches the course table: rows df = 1–30, 40, 60, 80, 100, 1000 and z; if your df is not listed, use the next smaller df.</p>
 </div>
 
@@ -502,6 +524,175 @@ sub .ph::before { top: -.24em; }
   $("randpick").addEventListener("click", function (e) { var b = e.target.closest("button[data-r]"); if (b) load(RAND[b.getAttribute("data-r")]()); });
   var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (!$("proc").hidden) curve(cur, sol); }, 120); });
   load(FIXED[0]);
+  // ================= PART 2: standardizing =================
+  function nzf(id, ctx, mu, sd, x, tail, unit) { return { id: id, kind: "nzf", ctx: ctx, mu: mu, sd: sd, x: x, tail: tail, unit: unit }; }
+  function nzb(id, ctx, mu, sd, mode, val, unit) { return { id: id, kind: "nzb", ctx: ctx, mu: mu, sd: sd, mode: mode, val: val, unit: unit }; }
+  function ntf(id, ctx, mu0, se, df, xbar, alt, unit) { return { id: id, kind: "ntf", ctx: ctx, mu0: mu0, se: se, df: df, xbar: xbar, alt: alt, unit: unit }; }
+  function ntb(id, ctx, xbar, se, df, C, unit) { return { id: id, kind: "ntb", ctx: ctx, xbar: xbar, se: se, df: df, C: C, unit: unit }; }
+  var P2 = [
+    nzf("S1", "Sample means of daily phone screen time for random samples of college students follow a Normal model with mean μ<sub>x̄</sub> = 245 minutes and standard deviation σ<sub>x̄</sub> = 12 minutes. Find P(x̄ &gt; 263).", 245, 12, 263, "upper", "min"),
+    nzf("S2", "Sample mean resting heart rates follow a Normal model with mean μ<sub>x̄</sub> = 72.0 bpm and standard deviation σ<sub>x̄</sub> = 1.6 bpm. Find P(x̄ &lt; 70.0).", 72.0, 1.6, 70.0, "lower", "bpm"),
+    nzb("S3", "Using the screen-time model (mean 245 minutes, standard deviation 12 minutes), what sample mean marks the top 10% of all sample means?", 245, 12, "upper", 0.10, "min"),
+    nzb("S4", "Using the heart-rate model (mean 72.0 bpm, standard deviation 1.6 bpm), find the interval that contains the middle 95% of sample means.", 72.0, 1.6, "conf", 95, "bpm"),
+    ntf("S5", "Testing H<sub>0</sub>: μ = 12.0 hours of weekly study time against H<sub>1</sub>: μ &lt; 12.0. If H<sub>0</sub> is true, x̄ follows a t-model centered at 12.0 with standard error 0.45 hours and df = 14. The sample gives x̄ = 11.10. Find t and bracket the p-value.", 12.0, 0.45, 14, 11.10, "lower", "hr"),
+    ntf("S6", "Testing H<sub>0</sub>: μ = 50 minutes of daily commute time against H<sub>1</sub>: μ ≠ 50. If H<sub>0</sub> is true, x̄ follows a t-model centered at 50 with standard error 1.6 minutes and df = 22. The sample gives x̄ = 54.4. Find t and bracket the p-value.", 50, 1.6, 22, 54.4, "two", "min"),
+    ntb("S7", "A sample gives x̄ = 38.2 with standard error s<sub>x̄</sub> = 1.5 and df = 19. Find t<sub>c</sub> and the 95% confidence interval for μ.", 38.2, 1.5, 19, 95, ""),
+    ntb("S8", "A sample of n = 36 gives x̄ = 200 with standard error s<sub>x̄</sub> = 6. Find t<sub>c</sub> and the 90% confidence interval for μ.", 200, 6, 35, 90, "")
+  ];
+  function dp(v) { var t = String(v); return t.indexOf(".") < 0 ? 0 : t.split(".")[1].length; }
+  function fx(v, d) { return v.toFixed(d); }
+  function solve2(p) {
+    var s = {};
+    if (p.kind === "nzf") {
+      s.zraw = (p.x - p.mu) / p.sd; s.z = r2(s.zraw); s.tab = P4(s.z);
+      s.ans = Math.round((p.tail === "upper" ? 1 - s.tab : s.tab) * 10000) / 10000;
+    } else if (p.kind === "nzb") {
+      var q = solve(zb("", p.mode, p.val)); s.z = q.ans; s.tie = q.tie; s.target = q.target; s.tab = q.tab; s.exact = q.exact;
+      var d = Math.max(2, dp(p.mu));
+      if (p.mode === "conf") { s.lo = p.mu - s.z * p.sd; s.hi = p.mu + s.z * p.sd; s.dig = d; }
+      else { s.val = p.mu + s.z * p.sd; s.valExact = p.mu + s.exact * p.sd; s.dig = d; }
+    } else if (p.kind === "ntf") {
+      s.traw = (p.xbar - p.mu0) / p.se; s.t = r2(s.traw);
+      var q2 = solve(tf("", s.t, p.df, p.alt)); for (var k in q2) s[k] = q2[k];
+    } else {
+      var q3 = solve(tb("", p.C, p.df + 1)); for (var k2 in q3) s[k2] = q3[k2];
+      s.me = s.ans * p.se; s.lo = p.xbar - s.me; s.hi = p.xbar + s.me;
+    }
+    return s;
+  }
+  function ans2HTML(p, s) {
+    var u = p.unit ? " " + p.unit : "";
+    if (p.kind === "nzf") return "<b>" + f4(s.ans) + "</b> (z = " + zs(s.z) + ")";
+    if (p.kind === "nzb") return p.mode === "conf" ? "<b>" + fx(s.lo, 2) + " to " + fx(s.hi, 2) + u + "</b> (z = ±" + Math.abs(s.z).toFixed(2) + ")" : "<b>x̄ ≈ " + fx(s.val, 2) + u + "</b> (z = " + zs(s.z) + ")";
+    if (p.kind === "ntf") return "t = " + zs(s.t) + ", " + ansHTML(tf("", s.t, p.df, p.alt), s);
+    return "<b>" + fx(s.lo, 2) + " &lt; μ &lt; " + fx(s.hi, 2) + "</b> (t<sub>c</sub> = " + fmtT(s.row, s.ans) + ")";
+  }
+  function buildInputs2(p) {
+    var h;
+    if (p.kind === "ntf") {
+      h = '<label for="b0">t =</label><input type="text" inputmode="decimal" id="b0" placeholder="0.00"><span style="flex-basis:100%;height:0"></span>' +
+        '<label for="rel2">p-value is</label><select id="rel2"><option value="between">between</option><option value="less">less than</option><option value="greater">greater than</option></select>' +
+        '<input type="text" inputmode="decimal" id="b1" aria-label="first value" placeholder="0.00"><span id="andw2">and</span><input type="text" inputmode="decimal" id="b2" aria-label="second value" placeholder="0.00">';
+    } else if ((p.kind === "nzb" && p.mode === "conf") || p.kind === "ntb") {
+      h = '<span>' + (p.kind === "ntb" ? "Interval:" : "Middle 95%:") + '</span><input type="text" inputmode="decimal" id="b1" aria-label="lower endpoint" placeholder="lower"><span>to</span><input type="text" inputmode="decimal" id="b2" aria-label="upper endpoint" placeholder="upper">';
+    } else {
+      h = '<label for="b1">' + (p.kind === "nzf" ? "Probability =" : "x̄ =") + '</label><input type="text" inputmode="decimal" id="b1" placeholder="' + (p.kind === "nzf" ? "0.0000" : "0.00") + '">';
+    }
+    $("ansrow2").innerHTML = h;
+    if (p.kind === "ntf") $("rel2").addEventListener("change", function () { var b = this.value === "between"; $("b2").hidden = !b; $("andw2").hidden = !b; });
+    [].forEach.call($("ansrow2").querySelectorAll("input"), function (el) { el.addEventListener("keydown", function (e) { if (e.key === "Enter") check2(); }); });
+  }
+  function grade2(p, s) {
+    var b1 = num(($("b1") || {}).value), b2 = num(($("b2") || {}).value);
+    if (p.kind === "nzf") { if (isNaN(b1)) return null; return Math.abs(b1 - s.ans) <= 0.00025; }
+    if (p.kind === "nzb" && p.mode !== "conf") { if (isNaN(b1)) return null; return Math.abs(b1 - s.val) <= 0.1 * p.sd + 0.005 || Math.abs(b1 - s.valExact) <= 0.02 * p.sd + 0.01; }
+    if (p.kind === "nzb" || p.kind === "ntb") {
+      if (isNaN(b1) || isNaN(b2)) return null; var lo = Math.min(b1, b2), hi = Math.max(b1, b2), tol = 0.015 * p.sd + 0.011;
+      if (p.kind === "ntb") tol = 0.002 * p.se + 0.011;
+      return Math.abs(lo - s.lo) <= tol && Math.abs(hi - s.hi) <= tol;
+    }
+    var t0 = num($("b0").value), rel = $("rel2").value, A = s.ans;
+    if (isNaN(t0) || isNaN(b1) || (rel === "between" && isNaN(b2))) return null;
+    var tok = Math.abs(t0 - s.t) <= 0.011, bok;
+    if (rel !== A.rel) bok = false;
+    else if (rel === "between") { var l = Math.min(b1, b2), h2 = Math.max(b1, b2); bok = Math.abs(l - A.lo) < 1e-6 && Math.abs(h2 - A.hi) < 1e-6; }
+    else bok = Math.abs(b1 - A.v) < 1e-6;
+    s.partial = tok && !bok ? "Your t is right, but the bracket isn't." : !tok && bok ? "Your bracket matches the right t, but check your t-value." : "";
+    return tok && bok;
+  }
+  function steps2(p, s) {
+    var L = [], u = p.unit ? " " + p.unit : "";
+    if (p.kind === "nzf") {
+      L.push("Standardize: z = (x̄ − μ<sub>x̄</sub>) / σ<sub>x̄</sub> = (" + p.x + " − " + p.mu + ") / " + p.sd + " = " + fx(s.zraw, 4).replace(/0+$/, "").replace(/\.$/, "") + " ≈ <b>" + zs(s.z) + "</b>.");
+      L.push("So P(x̄ " + (p.tail === "upper" ? "&gt; " : "&lt; ") + p.x + ") = P(Z " + (p.tail === "upper" ? "&gt; " : "&lt; ") + zs(s.z) + ").");
+      L.push("z-table: row " + rowLabel(s.z) + ", column " + colLabel(s.z) + " gives the area to the left, " + f4(s.tab) + ".");
+      L.push(p.tail === "upper" ? "Area to the right: 1 − " + f4(s.tab) + " = <b>" + f4(s.ans) + "</b>." : "We want the area to the left, so the answer is <b>" + f4(s.ans) + "</b>.");
+    } else if (p.kind === "nzb") {
+      if (p.mode === "conf") {
+        L.push("The middle 95% leaves 0.025 in each tail, so look for 0.9750 inside the z-table.");
+        L.push("It is in row " + rowLabel(s.z) + ", column " + colLabel(s.z) + ": z = ±<b>" + Math.abs(s.z).toFixed(2) + "</b>.");
+        L.push("Convert back to the original units with x̄ = μ<sub>x̄</sub> ± z·σ<sub>x̄</sub> = " + p.mu + " ± " + Math.abs(s.z).toFixed(2) + "(" + p.sd + ") = " + p.mu + " ± " + fx(Math.abs(s.z) * p.sd, 3) + ".");
+        L.push("Middle 95%: <b>" + fx(s.lo, 2) + " to " + fx(s.hi, 2) + u + "</b>.");
+      } else {
+        L.push("The top " + Math.round(p.val * 100) + "% means an area of " + f4(s.target) + " to the left. Look for " + f4(s.target) + " inside the z-table.");
+        L.push("The closest area is " + f4(s.tab) + " (row " + rowLabel(s.z) + ", column " + colLabel(s.z) + "), so z = <b>" + zs(s.z) + "</b>.");
+        L.push("Convert back: x̄ = μ<sub>x̄</sub> + z·σ<sub>x̄</sub> = " + p.mu + " + " + zs(s.z) + "(" + p.sd + ") = <b>" + fx(s.val, 2) + u + "</b>.");
+        L.push("<span class='dim'>(With software's z = " + s.exact.toFixed(4) + ", x̄ = " + fx(s.valExact, 2) + "; either answer is fine.)</span>");
+      }
+    } else if (p.kind === "ntf") {
+      L.push("Standardize using the null value: t = (x̄ − μ<sub>0</sub>) / s<sub>x̄</sub> = (" + p.xbar + " − " + p.mu0 + ") / " + p.se + " = " + fx(s.traw, 4).replace(/0+$/, "").replace(/\.$/, "") + " ≈ <b>" + zs(s.t) + "</b>.");
+      steps(tf("", s.t, p.df, p.alt), s).forEach(function (x) { L.push(x); });
+    } else {
+      steps(tb("", p.C, p.df + 1), s).slice(0, 2).forEach(function (x) { L.push(x); });
+      L.push("t<sub>c</sub> = <b>" + fmtT(s.row, s.ans) + "</b> (row " + s.row + ", " + p.C + "% column).");
+      L.push("Convert back to the original scale: ME = t<sub>c</sub>·s<sub>x̄</sub> = " + fmtT(s.row, s.ans) + "(" + p.se + ") = " + fx(s.me, 3) + ".");
+      L.push("Interval: x̄ ± ME = " + p.xbar + " ± " + fx(s.me, 3) + " → <b>" + fx(s.lo, 2) + " &lt; μ &lt; " + fx(s.hi, 2) + "</b>.");
+    }
+    return L;
+  }
+  function curve2(p, s) {
+    var isT = p.kind === "ntf" || p.kind === "ntb", df = isT ? p.df : 0;
+    var f = isT ? function (u) { return tpdf(u, df); } : zpdf;
+    var c = p.kind === "nzf" || p.kind === "nzb" ? p.mu : p.kind === "ntf" ? p.mu0 : p.xbar, sc = isT ? p.se : p.sd;
+    var ext = 4; if (p.kind === "ntf") ext = Math.max(4, Math.min(7, Math.abs(s.t) + 1));
+    var svg = $("plot2"), w = Math.max(svg.parentNode.clientWidth, 300), H = Math.round(Math.max(190, Math.min(280, w * 0.38)));
+    var pl = 12, pr = 12, pt = 30, pb = 46, lo = -ext, hi = ext, ymax = 0.42;
+    var x = function (u) { return pl + (u - lo) / (hi - lo) * (w - pl - pr); };
+    var y = function (d) { return H - pb - d / ymax * (H - pt - pb); };
+    var o = [];
+    function path(a, b) { var q = [], n = 200; for (var k = 0; k <= n; k++) { var u = a + (b - a) * k / n; q.push(x(u).toFixed(1) + "," + y(f(u)).toFixed(1)); } return q.join(" "); }
+    function shade(a, b) { a = Math.max(a, lo); b = Math.min(b, hi); if (b <= a) return; o.push('<polygon points="' + x(a).toFixed(1) + "," + y(0) + " " + path(a, b) + " " + x(b).toFixed(1) + "," + y(0) + '" fill="var(--hit)" fill-opacity="0.4"/>'); }
+    function mark(u, label, dash, lvl) { if (u < lo || u > hi) return; var ly = dash ? pt + 8 + 13 * (lvl || 0) : pt - 10; o.push('<line x1="' + x(u) + '" x2="' + x(u) + '" y1="' + (ly + 4) + '" y2="' + y(0) + '" stroke="' + (dash ? "var(--muted)" : "var(--ink)") + '" stroke-width="1.4"' + (dash ? ' stroke-dasharray="4 3"' : "") + '/><text x="' + x(u) + '" y="' + ly + '" text-anchor="middle" style="font-size:12px"' + (dash ? ' fill="var(--muted)"' : "") + ">" + label + "</text>"); }
+    var lbl = "";
+    if (p.kind === "nzf") { if (p.tail === "upper") shade(s.z, hi); else shade(lo, s.z); mark(s.z, "x̄ = " + p.x, false); lbl = "shaded area = " + f4(s.ans); }
+    else if (p.kind === "nzb") {
+      if (p.mode === "conf") { shade(-Math.abs(s.z), Math.abs(s.z)); mark(-Math.abs(s.z), fx(s.lo, 2), false); mark(Math.abs(s.z), fx(s.hi, 2), false); lbl = "middle area = 95%"; }
+      else { shade(s.z, hi); mark(s.z, "x̄ = " + fx(s.val, 2), false); lbl = "upper tail = " + p.val.toFixed(2); }
+    } else if (p.kind === "ntf") {
+      var at = Math.abs(s.t);
+      if (p.alt === "two") { shade(lo, -at); shade(at, hi); } else if (p.alt === "upper") shade(s.t, hi); else shade(lo, s.t);
+      mark(s.t, "x̄ = " + p.xbar, false);
+      if (!s.wrong) { var sg = p.alt === "lower" ? -1 : 1; [s.j, s.j + 1].forEach(function (k, qq) { if (k > 10 || k < 1) return; var v = s.vals[k]; mark(sg * v, (sg < 0 ? "−" : "") + fmtT(s.row, v), true, qq); if (p.alt === "two") mark(-sg * v, "−" + fmtT(s.row, v), true, qq); }); }
+      lbl = "shaded area = p-value; dashed lines = table values";
+    } else { shade(-s.ans, s.ans); mark(-s.ans, fx(s.lo, 2), false); mark(s.ans, fx(s.hi, 2), false); lbl = "middle area = " + p.C + "%"; }
+    o.push('<polyline points="' + path(lo, hi) + '" fill="none" stroke="var(--ink)" stroke-width="2"/>');
+    o.push('<line x1="' + pl + '" x2="' + (w - pr) + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="var(--ink)"/>');
+    var dg = Math.max(dp(c), dp(sc)), step = w < 420 ? 2 : 1;
+    for (var tk = Math.ceil(lo); tk <= hi; tk++) {
+      if (tk % step !== 0) continue;
+      o.push('<line x1="' + x(tk) + '" x2="' + x(tk) + '" y1="' + y(0) + '" y2="' + (y(0) + 4) + '" stroke="var(--ink)"/>');
+      o.push('<text x="' + x(tk) + '" y="' + (y(0) + 16) + '" text-anchor="middle" style="font-size:11px">' + fx(c + tk * sc, Math.min(dg, 2)) + "</text>");
+      o.push('<text x="' + x(tk) + '" y="' + (y(0) + 30) + '" text-anchor="middle" style="font-size:11px" fill="var(--muted)">' + tk + "</text>");
+    }
+    svg.setAttribute("viewBox", "0 0 " + w + " " + H); svg.setAttribute("width", w); svg.setAttribute("height", H); svg.innerHTML = o.join("");
+    $("key2").innerHTML = "<span><b>" + (isT ? "t-model, df = " + p.df : "Normal model") + "</b>: top axis labels in original units" + (p.unit ? " (" + p.unit + ")" : "") + ", grey labels = " + (isT ? "t" : "z") + "</span><span><i style='background:var(--hit);opacity:.5'></i>" + lbl + "</span>";
+  }
+  var cur2 = null, sol2 = null, done2 = {};
+  function renderPicker2() {
+    $("picker2").innerHTML = P2.map(function (p, i) { return (i === 4 ? "<span class='sep'></span>" : "") + '<button type="button" data-i="' + i + '" aria-pressed="' + (cur2 === p) + '" class="' + (done2[p.id] ? "done" : "") + '">' + p.id + (done2[p.id] === "ok" ? " ✓" : "") + "</button>"; }).join("");
+  }
+  function load2(p) { cur2 = p; sol2 = solve2(p); $("prompt2").innerHTML = '<span class="tag">' + p.id + "</span>" + p.ctx; buildInputs2(p); $("fb2").hidden = true; $("proc2").hidden = true; renderPicker2(); }
+  function showProc2() {
+    $("steps2").innerHTML = steps2(cur2, sol2).map(function (x) { return "<li>" + x + "</li>"; }).join("");
+    var k = cur2.kind;
+    $("tbl2").innerHTML = k === "nzf" ? zTable({ kind: "zf" }, { look: sol2.z }) : k === "nzb" ? zTable({ kind: "zb" }, { ans: sol2.z }) : k === "ntf" ? tTable({ kind: "tf" }, sol2) : tTable({ kind: "tb" }, sol2);
+    $("proc2").hidden = false; curve2(cur2, sol2);
+    var a = $("tbl2").querySelector(".ans"); if (a) { var box = $("tbl2"); box.scrollLeft = Math.max(0, a.offsetLeft - box.clientWidth / 2); }
+  }
+  function check2() {
+    var g = grade2(cur2, sol2), fb = $("fb2");
+    if (g === null) { fb.hidden = false; fb.className = "fb no"; fb.innerHTML = "Fill in every box first."; return; }
+    fb.hidden = false; fb.className = "fb " + (g ? "ok" : "no");
+    fb.innerHTML = g ? "Correct! " + ans2HTML(cur2, sol2) : "Not quite. " + (sol2.partial || "") + " The answer is " + ans2HTML(cur2, sol2) + ". Walk through the process below.";
+    if (done2[cur2.id] !== "ok") done2[cur2.id] = g ? "ok" : "tried";
+    renderPicker2(); showProc2();
+  }
+  $("check2").addEventListener("click", check2);
+  $("reveal2").addEventListener("click", function () { var fb = $("fb2"); fb.hidden = false; fb.className = "fb no"; fb.innerHTML = "The answer is " + ans2HTML(cur2, sol2) + "."; if (!done2[cur2.id]) done2[cur2.id] = "tried"; renderPicker2(); showProc2(); });
+  $("picker2").addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (b) load2(P2[+b.getAttribute("data-i")]); });
+  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (!$("proc").hidden) curve(cur, sol); if (!$("proc2").hidden) curve2(cur2, sol2); }, 120); });
+  load2(P2[0]);
+
 })();
 </script>
 </body></html>
