@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Slope Shuffle Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one narrow column (phone first). Data picker, scatter plot, shuffle buttons, slope dot plot, result sentence. Colors echo the course notes: blue titles, gold accents. */
+:root{
+  --bg:#f7f8fb; --panel:#ffffff; --ink:#1b2333; --muted:#5b6577; --rule:#dfe3eb;
+  --blue:#2f64c4; --blue-soft:#9db5e3; --gold:#b97d00; --gold-fill:#f1c232; --ghost:#b9c0cc;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans:Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161f; --panel:#1b2130; --ink:#e7ebf2; --muted:#a3acbd; --rule:#2f3748;
+  --blue:#7ea6f0; --blue-soft:#3f5a8f; --gold:#f1c232; --gold-fill:#f1c232; --ghost:#556074; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161f; --panel:#1b2130; --ink:#e7ebf2; --muted:#a3acbd; --rule:#2f3748;
+  --blue:#7ea6f0; --blue-soft:#3f5a8f; --gold:#f1c232; --gold-fill:#f1c232; --ghost:#556074; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 32px}
+main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-family:var(--serif);font-size:1.6rem;line-height:1.15;margin:0;text-wrap:balance}
+.kicker{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.lede{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel h2{font-family:var(--serif);font-size:1.05rem;margin:0;color:var(--blue)}
+label.lab{font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.03em}
+select{font:inherit;font-size:1rem;padding:10px 12px;border-radius:8px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);width:100%}
+.ctx{font-size:.88rem;color:var(--muted);margin:0}
+.ctx b{color:var(--ink);font-weight:600}
+.obs{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem}
+.obs span{white-space:nowrap}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--muted);font-family:var(--sans);font-size:10px}
+.axis{stroke:var(--rule);stroke-width:1}
+.grid{stroke:var(--rule);stroke-width:.6}
+.pt{fill:var(--blue);fill-opacity:.85;stroke:var(--panel);stroke-width:.8}
+.ghost{fill:none;stroke:var(--ghost);stroke-width:1}
+.fit{stroke:var(--blue);stroke-width:2}
+.origfit{stroke:var(--ghost);stroke-width:1.5;stroke-dasharray:5 4}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+button{font:inherit;font-weight:600;font-size:.95rem;padding:11px 6px;border-radius:8px;border:1px solid var(--blue);background:transparent;color:var(--blue);cursor:pointer;touch-action:manipulation}
+button.primary{background:var(--blue);color:var(--panel)}
+button:focus-visible,select:focus-visible{outline:3px solid var(--gold-fill);outline-offset:2px}
+button:disabled{opacity:.45;cursor:default}
+.row2{display:flex;gap:8px;flex-wrap:wrap}
+.row2 button{flex:1 1 140px;border-color:var(--rule);color:var(--muted);font-weight:500;font-size:.85rem}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;color:var(--muted)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;color:var(--muted);font-weight:500;font-size:.85rem;padding:9px 4px}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--blue);color:var(--panel);font-weight:600}
+.result{border-left:4px solid var(--gold-fill);padding:8px 12px;background:color-mix(in srgb,var(--gold-fill) 10%,var(--panel));border-radius:0 8px 8px 0;font-size:.95rem}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{border:1px solid var(--rule);border-radius:8px;padding:8px 10px}
+.stat .k{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.stat .v{font-family:var(--mono);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.stat .s{font-size:.75rem;color:var(--muted)}
+details{font-size:.88rem;color:var(--muted)}
+details summary{cursor:pointer;color:var(--ink);font-weight:600}
+details p{margin:.5em 0}
+footer{font-size:.75rem;color:var(--muted)}
+footer p{margin:.3em 0}
+.explain{border:1px solid var(--rule);border-left:4px solid var(--gold-fill);border-radius:0 8px 8px 0;padding:10px 12px;font-size:.88rem}
+.explain-h{font-weight:600;margin-bottom:4px}
+.explain ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:4px}
+.explain-note{margin:8px 0 0;color:var(--muted)}
+.pairs-h{font-size:.85rem;font-weight:600;margin-bottom:6px}
+.tblwrap{max-height:260px;overflow:auto;border:1px solid var(--rule);border-radius:8px}
+#ptab{border-collapse:collapse;width:100%;font-size:.82rem}
+#ptab th{position:sticky;top:0;background:var(--panel);text-align:right;font-weight:600;color:var(--muted);padding:6px 8px;border-bottom:2px solid var(--gold-fill);font-size:.74rem;line-height:1.25;vertical-align:bottom}
+#ptab th:first-child,#ptab td:first-child{text-align:left}
+#ptab td{padding:4px 8px;border-bottom:1px solid var(--rule);text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+#ptab td:first-child{font-family:var(--sans)}
+#ptab td.new{color:var(--blue);font-weight:600}
+#ptab td.same{color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<main>
+  <header>
+    <div class="kicker">MthStat 215 · Lesson 20</div>
+    <h1>Slope Shuffle Test</h1>
+    <p class="lede">If <i>x</i> and <i>y</i> were not related (β = 0), how far from 0 could a sample slope land just by chance? Shuffle the <i>y</i>-values to find out.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="h-data">
+    <h2 id="h-data">1. Pick a data set</h2>
+    <label class="lab" for="ds">Data set</label>
+    <select id="ds"></select>
+    <p class="ctx" id="ctx"></p>
+    <div class="obs" id="obs"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-shuf">
+    <h2 id="h-shuf">2. Shuffle the <i>y</i>-values</h2>
+    <div class="explain">
+      <div class="explain-h">What does a shuffle do?</div>
+      <ul>
+        <li>Each <i>x</i>-value stays with its <span class="unitword">person</span>.</li>
+        <li>The <i>y</i>-values are gathered up and dealt back out at random, like shuffling a deck of cards and handing one card to each <span class="unitword">person</span>.</li>
+        <li>No values are added or removed, so the <i>y</i>-values keep the same mean and spread. Only <b>which <i>x</i> each <i>y</i> is paired with</b> changes.</li>
+        <li>Because the pairing is random, any link between <i>x</i> and <i>y</i> is broken. A shuffled data set shows what the data could look like if β = 0.</li>
+      </ul>
+      <p class="explain-note">Watch the plot: each point keeps its left–right position (its <i>x</i>) and slides up or down to its new <i>y</i>. The table below shows who got which <i>y</i>-value.</p>
+    </div>
+    <p class="ctx" id="shufNote">Original data. The line is the least-squares line from the class notes.</p>
+    <svg id="sc" viewBox="0 0 360 250" role="img" aria-label="Scatter plot of the data with fitted line"></svg>
+    <div class="legend"><span><span class="sw" style="background:var(--blue)"></span>Points and line now shown</span><span><svg width="22" height="8" style="display:inline;width:22px;vertical-align:1px"><line x1="0" y1="4" x2="22" y2="4" class="origfit"/></svg> Original least-squares line</span></div>
+    <div class="btns">
+      <button class="primary" id="b1">Shuffle</button>
+      <button id="b10">+10</button>
+      <button id="b100">+100</button>
+      <button id="b1000">+1000</button>
+    </div>
+    <div class="row2">
+      <button id="orig">Show original data</button>
+      <button id="reset">Clear all shuffles</button>
+    </div>
+    <div class="pairs">
+      <div class="pairs-h" id="pairsH">Who got which <i>y</i>-value</div>
+      <div class="tblwrap"><table id="ptab"></table></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-dist">
+    <h2 id="h-dist">3. Where does our slope fall?</h2>
+    <span class="lab" id="dirLab">Count shuffled slopes that are…</span>
+    <div class="seg" role="group" aria-labelledby="dirLab">
+      <button id="dBoth" aria-pressed="true">as far from 0<br>(β ≠ 0)</button>
+      <button id="dUp" aria-pressed="false">≥ <i>b</i><br>(β &gt; 0)</button>
+      <button id="dDn" aria-pressed="false">≤ <i>b</i><br>(β &lt; 0)</button>
+    </div>
+    <svg id="dp" viewBox="0 0 360 210" role="img" aria-label="Dot plot of shuffled slopes"></svg>
+    <div class="legend"><span><span class="sw" style="background:var(--blue-soft)"></span>Shuffled slope</span><span><span class="sw" style="background:var(--gold-fill)"></span>At least as extreme as <i>b</i></span><span><span style="color:var(--blue);margin-right:4px">▲</span>Latest shuffle</span></div>
+    <div class="result" id="result" aria-live="polite"></div>
+    <div class="compare">
+      <div class="stat"><div class="k">Shuffle p-value</div><div class="v" id="pSim">–</div><div class="s" id="pSimS">no shuffles yet</div></div>
+      <div class="stat"><div class="k">t-test p-value (R)</div><div class="v" id="pT"></div><div class="s" id="pTS"></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>Why does shuffling work?</summary>
+      <p>Shuffling the <i>y</i>-values keeps every <i>x</i>-value and every <i>y</i>-value, but pairs them at random. Any link between <i>x</i> and <i>y</i> is broken, so each shuffled data set is what the data might look like if β = 0.</p>
+      <p>The shuffled slopes pile up around 0. If our sample slope <i>b</i> sits well inside that pile, a slope like ours is easy to get by chance. If it sits far out in the tail, chance alone is a poor explanation.</p>
+      <p>The proportion of shuffled slopes at least as extreme as <i>b</i> estimates the p-value. The <i>t</i>-test gets nearly the same answer from a formula and the <i>t</i>-table. Because the shuffles are random, your proportion will differ a little from a classmate's.</p>
+    </details>
+  </section>
+
+  <footer>
+    <p>Outbreak data: foodborne illness outbreak (Lesson 17). Hanford: Fadeley (1965), <i>Journal of Environmental Health</i> 27(6). Basketball: 2025–26 Big Ten, Horizon League and ACC teams, records including postseason (Sports-Reference).</p>
+  </footer>
+</main>
+
+<script>
+const BB = {"men":{"t":["Michigan","Nebraska","Michigan State","Illinois","Wisconsin","Purdue","UCLA","Ohio State","Iowa","Indiana","Minnesota","Southern California","Washington","Rutgers","Northwestern","Oregon","Maryland","Penn State","Duke","Virginia","Miami (FL)","North Carolina","Clemson","Louisville","NC State","Florida State","California","Stanford","Virginia Tech","Southern Methodist","Wake Forest","Syracuse","Pittsburgh","Notre Dame","Boston College","Georgia Tech","Wright State","Robert Morris","Green Bay","Detroit Mercy","Oakland","Purdue Fort Wayne","Northern Kentucky","Youngstown State","Milwaukee","Cleveland State","IU Indy"],"x":[17.8,10.9,10.5,14.4,6.9,11.1,6,6.7,8.2,6,0.9,0.7,3.5,-4.8,1.1,-3.1,-6.9,-5.6,18,11.6,10.2,8.1,7.1,11.8,6.9,2.5,4.9,3,3.9,6.2,1.9,0.7,-1.3,-0.8,-3.3,-3.6,6.8,5.3,0,-0.1,0.9,1,5.6,4.9,-3.3,-6.1,-4.8],"y":[92.5,80,77.14,75.68,68.57,76.92,66.67,61.76,64.86,56.25,45.45,56.25,48.48,41.18,44.12,37.5,36.36,37.5,92.11,83.33,74.29,72.73,68.57,68.57,58.82,54.55,64.71,60.61,59.38,58.82,51.43,46.88,39.39,41.94,35.48,35.48,65.71,66.67,54.55,53.12,50,53.12,58.82,46.88,37.5,33.33,21.88]},"women":{"t":["UCLA","Michigan","Iowa","Ohio State","Minnesota","Maryland","Michigan State","Washington","Illinois","Southern California","Oregon","Nebraska","Indiana","Wisconsin","Purdue","Penn State","Northwestern","Rutgers","Duke","Louisville","North Carolina","NC State","Syracuse","Virginia Tech","Notre Dame","Virginia","Clemson","California","Stanford","Miami (FL)","Georgia Tech","Florida State","Wake Forest","Southern Methodist","Pittsburgh","Boston College","Green Bay","Youngstown State","Cleveland State","Purdue Fort Wayne","Northern Kentucky","Robert Morris","IU Indy","Oakland","Wright State","Milwaukee","Detroit Mercy"],"x":[27.5,19.7,11,15,15.3,18.6,16,9.3,10.4,5.5,8.7,11.4,1.2,-4.1,-2.8,-7.8,-10.5,-11.5,14.4,17.7,15.5,9.6,9,11,12,10,8.6,6,7.3,4.9,-0.1,-5.6,-1.1,-12.9,-12.5,-12.7,9.3,8.7,9.9,6.7,-1.4,3.4,-2.4,-7.5,-4.4,-7.9,-10.3],"y":[97.37,80,79.41,77.14,72.73,72.73,71.88,66.67,64.71,56.25,63.89,59.38,56.25,47.06,43.33,37.93,27.59,31.03,75,78.38,77.78,65.62,72.73,69.7,69.44,64.71,63.64,58.33,60,54.55,42.42,32.26,43.75,30,25.81,16.13,73.53,71.43,72.22,60,46.88,60,45.16,32.26,31.25,25,22.58]}};
+const DATA = {
+  fatal:{name:"Outbreak fatalities (n = 11)", ctx:"Each point is one person who <b>died</b> in the outbreak.", xl:"Age (years)", yl:"Incubation period (hours)", x:[29,37,42,38,51,30,32,33,31,32,50], y:[13,34,20,18,19,35,48,21,32,48,16], p:0.1441, dir:"both", dec:3},
+  surv:{name:"Outbreak survivors (n = 7)", ctx:"Each point is one person who <b>survived</b> the outbreak.", xl:"Age (years)", yl:"Incubation period (hours)", x:[39,44,17,43,59,32,36], y:[46,43,20,72,86,44,28], p:0.01296, dir:"both", dec:3},
+  hanford:{name:"Hanford cancer mortality (n = 9)", ctx:"Each point is one Oregon <b>county or city</b> downstream of the Hanford site.", xl:"Index of exposure", yl:"Cancer deaths per 100,000 person-years", x:[8.34,6.41,3.41,3.83,2.57,11.64,1.25,2.49,1.62], y:[210.3,177.9,129.9,162.3,130.1,207.5,113.5,147.1,137.5], p:0.000332, dir:"up", dec:3},
+  men:{name:"Men's basketball 2025–26 (n = 47)", ctx:"Each point is one Big Ten, Horizon or ACC <b>men's team</b>.", xl:"Scoring margin (points per game)", yl:"Win %", x:BB.men.x, y:BB.men.y, p:1.38e-23, dir:"both", dec:4},
+  women:{name:"Women's basketball 2025–26 (n = 47)", ctx:"Each point is one Big Ten, Horizon or ACC <b>women's team</b>.", xl:"Scoring margin (points per game)", yl:"Win %", x:BB.women.x, y:BB.women.y, p:5.82e-28, dir:"both", dec:4}
+};
+const LABELS={
+  fatal:{unit:"person",col:"Person",short:["Age","Incubation"],names:null},
+  surv:{unit:"person",col:"Person",short:["Age","Incubation"],names:null},
+  hanford:{unit:"location",col:"County / city",short:["Exposure index","Mortality"],names:["Clatsop","Columbia","Gilliam","Hood River","Morrow","Portland","Sherman","Umatilla","Wasco"]},
+  men:{unit:"team",col:"Team",short:["Margin","Win %"],names:BB.men.t},
+  women:{unit:"team",col:"Team",short:["Margin","Win %"],names:BB.women.t}
+};
+const $=id=>document.getElementById(id);
+const NS="http://www.w3.org/2000/svg";
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let D, key, cur, slopes=[], dir="both", lastSlope=null, animating=false, xr, yr, sdPerm, srange;
+
+function fit(x,y){const n=x.length;let mx=0,my=0;for(let i=0;i<n;i++){mx+=x[i];my+=y[i]}mx/=n;my/=n;
+  let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2}const b=sxy/sxx;return{b,a:my-b*mx}}
+function shuffled(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function nice(lo,hi,n){const span=hi-lo,step0=span/n,mag=10**Math.floor(Math.log10(step0)),r=step0/mag;
+  const step=(r<1.5?1:r<3?2:r<7?5:10)*mag;const ticks=[];for(let v=Math.ceil(lo/step)*step;v<=hi+1e-9;v+=step)ticks.push(+v.toFixed(10));return{ticks,step}}
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function fmt(v,d){const s=Math.abs(v).toFixed(d);return (v<0?"−":"")+s}
+function fmtP(p){if(p<0.0001)return p.toExponential(1).replace("e-"," × 10⁻").replace(/⁻(\d+)/,(m,g)=>"⁻"+g.split("").map(c=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[c]).join(""));return p<0.001?p.toFixed(5):p.toFixed(4)}
+
+/* ---------- scatter ---------- */
+const SC={W:360,H:250,l:44,r:10,t:10,b:40};
+let sx,sy,ptEls=[],fitEl,origEl;
+function drawScatter(){
+  const s=$("sc");s.innerHTML="";
+  const pad=(a)=>{const lo=Math.min(...a),hi=Math.max(...a),p=(hi-lo)*0.08;return[lo-p,hi+p]};
+  xr=pad(D.x);yr=pad(D.y);
+  sx=v=>SC.l+(v-xr[0])/(xr[1]-xr[0])*(SC.W-SC.l-SC.r);
+  sy=v=>SC.H-SC.b-(v-yr[0])/(yr[1]-yr[0])*(SC.H-SC.t-SC.b);
+  const gx=nice(xr[0],xr[1],6),gy=nice(yr[0],yr[1],5);
+  gx.ticks.forEach(v=>{el("line",{x1:sx(v),x2:sx(v),y1:SC.t,y2:SC.H-SC.b,class:"grid"},s);const t=el("text",{x:sx(v),y:SC.H-SC.b+13,"text-anchor":"middle"},s);t.textContent=fmt(v,gx.step<1?1:0)});
+  gy.ticks.forEach(v=>{el("line",{x1:SC.l,x2:SC.W-SC.r,y1:sy(v),y2:sy(v),class:"grid"},s);const t=el("text",{x:SC.l-5,y:sy(v)+3,"text-anchor":"end"},s);t.textContent=fmt(v,gy.step<1?1:0)});
+  el("line",{x1:SC.l,x2:SC.W-SC.r,y1:SC.H-SC.b,y2:SC.H-SC.b,class:"axis"},s);
+  el("line",{x1:SC.l,x2:SC.l,y1:SC.t,y2:SC.H-SC.b,class:"axis"},s);
+  let t=el("text",{x:(SC.l+SC.W-SC.r)/2,y:SC.H-6,"text-anchor":"middle"},s);t.textContent=D.xl;
+  t=el("text",{x:11,y:(SC.t+SC.H-SC.b)/2,"text-anchor":"middle",transform:`rotate(-90 11 ${(SC.t+SC.H-SC.b)/2})`},s);t.textContent=D.yl;
+  const clip=el("clipPath",{id:"cp"},el("defs",{},s));el("rect",{x:SC.l,y:SC.t,width:SC.W-SC.l-SC.r,height:SC.H-SC.t-SC.b},clip);
+  const o=fit(D.x,D.y);
+  origEl=el("line",{class:"origfit","clip-path":"url(#cp)",x1:sx(xr[0]),x2:sx(xr[1]),y1:sy(o.a+o.b*xr[0]),y2:sy(o.a+o.b*xr[1])},s);
+  fitEl=el("line",{class:"fit","clip-path":"url(#cp)"},s);
+  const r=D.x.length>30?3.6:5;
+  ptEls=D.x.map((xv,i)=>el("circle",{cx:sx(xv),cy:sy(D.y[i]),r,class:"pt"},s));
+  setFit(o);
+}
+function setFit(f){fitEl.setAttribute("x1",sx(xr[0]));fitEl.setAttribute("x2",sx(xr[1]));fitEl.setAttribute("y1",sy(f.a+f.b*xr[0]));fitEl.setAttribute("y2",sy(f.a+f.b*xr[1]))}
+function showY(y,animate){
+  return new Promise(res=>{
+    const from=cur.slice();cur=y.slice();renderTable();
+    const f0=fit(D.x,from),f1=fit(D.x,cur);
+    if(!animate||reduce){ptEls.forEach((p,i)=>p.setAttribute("cy",sy(cur[i])));setFit(f1);return res()}
+    const T=650,t0=performance.now();
+    const step=now=>{let k=Math.min(1,(now-t0)/T);const e=k<.5?2*k*k:1-((-2*k+2)**2)/2;
+      ptEls.forEach((p,i)=>p.setAttribute("cy",sy(from[i]+(cur[i]-from[i])*e)));
+      setFit({a:f0.a+(f1.a-f0.a)*e,b:f0.b+(f1.b-f0.b)*e});
+      if(k<1)requestAnimationFrame(step);else res()};
+    requestAnimationFrame(step);
+  });
+}
+
+function renderTable(){
+  const L=LABELS[key],isOrig=cur.every((v,i)=>v===D.y[i]);
+  document.querySelectorAll(".unitword").forEach(e=>e.textContent=L.unit);
+  const nm=i=>L.names?L.names[i]:`${L.col} ${i+1}`;
+  let h=`<thead><tr><th>${L.col}</th><th>${L.short[0]} (<i>x</i>)<br>stays put</th><th>Original <i>y</i><br>${L.short[1]}</th><th>${isOrig?"<i>y</i> now":"Shuffled <i>y</i>"}<br>${L.short[1]}</th></tr></thead><tbody>`;
+  D.x.forEach((xv,i)=>{const same=cur[i]===D.y[i];
+    h+=`<tr><td>${nm(i)}</td><td>${xv}</td><td>${D.y[i]}</td><td class="${isOrig||same?"same":"new"}">${cur[i]}</td></tr>`});
+  $("ptab").innerHTML=h+"</tbody>";
+  $("pairsH").innerHTML=isOrig?`Who got which <i>y</i>-value (original data)`:`Who got which <i>y</i>-value after shuffle #${slopes.length+ (animating?1:0)}`;
+}
+
+/* ---------- dot plot ---------- */
+const DP={W:360,H:210,l:10,r:10,t:28,b:30};
+function isExtreme(s){const b=D.b,eps=1e-9;if(dir==="both")return Math.abs(s)>=Math.abs(b)-eps;if(dir==="up")return s>=b-eps;return s<=b+eps}
+function drawDots(){
+  const s=$("dp");s.innerHTML="";
+  const lo=srange[0],hi=srange[1];
+  const X=v=>DP.l+(v-lo)/(hi-lo)*(DP.W-DP.l-DP.r);
+  const base=DP.H-DP.b;
+  const g=nice(lo,hi,6);
+  el("line",{x1:DP.l,x2:DP.W-DP.r,y1:base,y2:base,class:"axis"},s);
+  g.ticks.forEach(v=>{el("line",{x1:X(v),x2:X(v),y1:base,y2:base+4,class:"axis"},s);const t=el("text",{x:X(v),y:base+15,"text-anchor":"middle"},s);t.textContent=fmt(v,g.step<0.1?2:g.step<1?1:0)});
+  let t=el("text",{x:DP.W/2,y:DP.H-2,"text-anchor":"middle"},s);t.textContent="Shuffled slope";
+  // bins
+  const nb=40,bw=(hi-lo)/nb,bins=Array.from({length:nb},()=>({n:0,e:0}));
+  let over=0;
+  slopes.forEach(v=>{let k=Math.floor((v-lo)/bw);if(k<0||k>=nb){over++;k=Math.max(0,Math.min(nb-1,k))}bins[k].n++;if(isExtreme(v))bins[k].e++});
+  const maxN=Math.max(1,...bins.map(b=>b.n));
+  const pxW=(DP.W-DP.l-DP.r)/nb, avail=base-DP.t-4;
+  const rad=Math.min(pxW/2*0.92,avail/(2*maxN));
+  if(slopes.length&&rad>=1.6){
+    // dot mode: within a bin, stack non-extreme dots first, then extreme
+    bins.forEach((bn,k)=>{const cx=DP.l+(k+.5)*pxW;for(let j=0;j<bn.n;j++){const ex=j>=bn.n-bn.e;
+      el("circle",{cx,cy:base-rad-j*2*rad,r:rad*0.9,fill:ex?"var(--gold-fill)":"var(--blue-soft)"},s)}});
+  } else if(slopes.length){
+    const sc=avail/maxN;
+    bins.forEach((bn,k)=>{if(!bn.n)return;const x=DP.l+k*pxW+0.4,w=pxW-0.8;
+      el("rect",{x,width:w,y:base-bn.n*sc,height:(bn.n-bn.e)*sc,fill:"var(--blue-soft)"},s);
+      if(bn.e)el("rect",{x,width:w,y:base-bn.e*sc,height:bn.e*sc,fill:"var(--gold-fill)"},s)});
+  } else {
+    t=el("text",{x:DP.W/2,y:base-avail/2,"text-anchor":"middle"},s);t.textContent="Shuffled slopes will pile up here.";
+  }
+  // reference lines
+  const mark=(v,label,solid)=>{const xx=X(v);el("line",{x1:xx,x2:xx,y1:DP.t-6,y2:base,stroke:"var(--ink)","stroke-width":solid?1.6:1.2,"stroke-dasharray":solid?"":"4 3"},s);
+    const tt=el("text",{x:xx,y:DP.t-10,"text-anchor":xx>DP.W-50?"end":xx<50?"start":"middle",style:"fill:var(--ink);font-weight:600"},s);tt.textContent=label};
+  mark(D.b,"b = "+fmt(D.b,D.dec),true);
+  if(dir==="both")mark(-D.b,fmt(-D.b,D.dec),false);
+  const z=X(0);el("line",{x1:z,x2:z,y1:base,y2:base+6,stroke:"var(--ink)","stroke-width":1.5},s);
+  if(lastSlope!==null){const lx=X(Math.max(lo,Math.min(hi,lastSlope)));el("path",{d:`M${lx} ${base+1} l-5 9 h10 z`,fill:"var(--blue)"},s)}
+}
+function updateStats(){
+  const N=slopes.length,E=slopes.filter(isExtreme).length;
+  const word=dir==="both"?`at least as far from 0 as <i>b</i> = <span class="num">${fmt(D.b,D.dec)}</span>`:dir==="up"?`greater than or equal to <i>b</i> = <span class="num">${fmt(D.b,D.dec)}</span>`:`less than or equal to <i>b</i> = <span class="num">${fmt(D.b,D.dec)}</span>`;
+  if(!N){$("result").innerHTML=`Our sample slope is <i>b</i> = <span class="num">${fmt(D.b,D.dec)}</span>. Shuffle to see how often a slope ${dir==="both"?"this far from 0":"this extreme"} happens when β = 0.`;$("pSim").textContent="–";$("pSimS").textContent="no shuffles yet"}
+  else{
+    $("result").innerHTML=`In <b class="num">${E.toLocaleString()}</b> of <b class="num">${N.toLocaleString()}</b> shuffles, the slope was ${word}.`+(E===0?` Not one shuffle came close.`:"");
+    $("pSim").textContent=E===0?"< "+(+(1/N).toPrecision(2)):(E/N).toFixed(N>=1000?3:2);
+    $("pSimS").textContent=`${E} ÷ ${N}`;
+  }
+  const pt=dir==="both"?D.p:(dir==="up")===(D.b>0)?D.p/2:1-D.p/2;
+  $("pT").textContent=fmtP(pt);
+  $("pTS").textContent=dir==="both"?"Pr(>|t|), two-sided":(dir==="up")===(D.b>0)?"Pr(>|t|) ÷ 2, one-sided":"one-sided, opposite direction";
+  ["b1","b10","b100","b1000"].forEach(id=>$(id).disabled=animating);
+}
+function render(){drawDots();updateStats()}
+
+/* ---------- actions ---------- */
+async function one(){if(animating)return;animating=true;updateStats();
+  const y=shuffled(D.y);await showY(y,true);const b=fit(D.x,y).b;slopes.push(b);lastSlope=b;
+  $("shufNote").textContent=`Shuffle #${slopes.length}: same x-values, same y-values, paired at random. Slope = ${fmt(b,D.dec)}.`;
+  animating=false;render()}
+function many(k){if(animating)return;let y;for(let i=0;i<k;i++){y=shuffled(D.y);slopes.push(fit(D.x,y).b)}
+  lastSlope=slopes[slopes.length-1];showY(y,false);
+  $("shufNote").textContent=`Shuffle #${slopes.length} is shown (slope = ${fmt(lastSlope,D.dec)}). ${k} new shuffles added to the plot below.`;render()}
+function original(){if(animating)return;showY(D.y,!reduce);$("shufNote").textContent="Original data. The line is the least-squares line from the class notes."}
+function setDir(d){dir=d;$("dBoth").setAttribute("aria-pressed",d==="both");$("dUp").setAttribute("aria-pressed",d==="up");$("dDn").setAttribute("aria-pressed",d==="down");render()}
+function load(k){
+  key=k;D=DATA[k];D.b=fit(D.x,D.y).b;cur=D.y.slice();slopes=[];lastSlope=null;
+  // range for slope axis from a quick pilot run
+  const pilot=[];for(let i=0;i<600;i++)pilot.push(fit(D.x,shuffled(D.y)).b);
+  const m=Math.max(...pilot.map(Math.abs));sdPerm=Math.sqrt(pilot.reduce((s,v)=>s+v*v,0)/pilot.length);
+  const R=Math.max(Math.abs(D.b)*1.18,sdPerm*4.2,m*1.02);srange=[-R,R];
+  $("ctx").innerHTML=`${D.ctx} <i>x</i> = ${D.xl.toLowerCase()}, <i>y</i> = ${D.yl.charAt(0).toLowerCase()+D.yl.slice(1)}.`;
+  const f=fit(D.x,D.y);
+  $("obs").innerHTML=`<span>Least-squares line: <span class="num">ŷ = ${fmt(f.a,2)} ${f.b<0?"−":"+"} ${Math.abs(f.b).toFixed(D.dec)}x</span></span><span>Sample slope: <b class="num">b = ${fmt(f.b,D.dec)}</b></span>`;
+  $("shufNote").textContent="Original data. The line is the least-squares line from the class notes.";
+  drawScatter();renderTable();setDir(D.dir);
+}
+for(const k in DATA){const o=document.createElement("option");o.value=k;o.textContent=DATA[k].name;$("ds").appendChild(o)}
+$("ds").addEventListener("change",e=>load(e.target.value));
+$("b1").onclick=one;$("b10").onclick=()=>many(10);$("b100").onclick=()=>many(100);$("b1000").onclick=()=>many(1000);
+$("orig").onclick=original;$("reset").onclick=()=>{slopes=[];lastSlope=null;original();render()};
+$("dBoth").onclick=()=>setDir("both");$("dUp").onclick=()=>setDir("up");$("dDn").onclick=()=>setDir("down");
+load("fatal");
+</script>
+
+</body>
+</html>
