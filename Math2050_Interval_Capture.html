@@ -239,10 +239,10 @@ sub .ph::before { top: -.24em; }
 (function () {
   "use strict";
   var CTX = {
-    poll: { p: 0.48, n: 692, unit: "voters", succ: "supports the {C} candidate", fail: "does not", xLabel: "Supporters x",
+    poll: { p: 0.48, n: 668, unit: "voters", succ: "supports the {C} candidate", fail: "does not", xLabel: "Supporters x",
           param: "all voters who support the {C} candidate",
-          intro: "Simulate one poll of 692 likely voters when the candidate's true support is 48%.",
-          note: "Each simulated poll is a simple random sample of 692 likely voters, the size of the September 2026 Marquette Law School Poll's likely-voter sample. Real polls also have weighting and nonresponse, so their reported margins of error are larger." },
+          intro: "Simulate one poll of 668 likely voters when the candidate's true support is 48%.",
+          note: "Each simulated poll is a simple random sample of 668 likely voters, the size of the final (October 14–22, 2026) Marquette Law School Poll's likely-voter sample. Real polls also have weighting and nonresponse, so their reported margins of error are larger." },
     ft: { p: 0.80, n: 100, unit: "shots", succ: "made", fail: "missed", xLabel: "Shots made x",
           param: "free throws this shooter makes",
           intro: "Simulate one 100-shot session for a true 80% free-throw shooter (like Dr. Murphy claims to be).",
@@ -606,7 +606,7 @@ sub .ph::before { top: -.24em; }
     ["Did your interval from Part 1 capture <i>p</i>? Could you have known that without seeing the solid line?",
      "Most intervals capture <i>p</i> (about 95% of them at 95% confidence), but a few do not. Without the solid line there is no way to tell. In a real poll <i>p</i> is unknown, so we never find out whether our one interval is one of the hits or one of the misses. That is why we say we are 95% <i>confident</i> rather than giving a probability for our one interval."],
     ["Look at the intervals that miss. Where are their sample proportions " + PH + " compared with <i>p</i>?",
-     "Every interval that misses comes from a sample whose " + PH + " landed unusually far from <i>p</i>, more than about z<sub>α/2</sub> standard deviations above or below it (about 3.7 percentage points for a 692-voter poll at 95%). Each interval is centered at its own " + PH + ", so when " + PH + " is that far away, the interval does not reach back to <i>p</i>. Misses happen on both sides, about equally often."],
+     "Every interval that misses comes from a sample whose " + PH + " landed unusually far from <i>p</i>, more than about z<sub>α/2</sub> standard deviations above or below it (about 3.8 percentage points for a 668-voter poll at 95%). Each interval is centered at its own " + PH + ", so when " + PH + " is that far away, the interval does not reach back to <i>p</i>. Misses happen on both sides, about equally often."],
     ["After 100 or more intervals, how close is the percent captured to the confidence level? Why isn't it exactly equal?",
      "It is close to the confidence level, usually within a couple of percentage points, but rarely exactly equal. The percent captured is itself a sample proportion: it varies from run to run and settles closer to the confidence level as the number of intervals grows."],
     ["Switch from 95% to 90%, then to 99%. What happens to the widths of the intervals and to the percent captured?",
