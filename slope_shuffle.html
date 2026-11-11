@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Slope Shuffle Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
@@ -73,6 +70,9 @@ footer p{margin:.3em 0}
 .explain-h{font-weight:600;margin-bottom:4px}
 .explain ul{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:4px}
 .explain-note{margin:8px 0 0;color:var(--muted)}
+.toggle{border-color:var(--rule);color:var(--ink);font-weight:500;font-size:.88rem;text-align:left;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.toggle::after{content:"\25BE";color:var(--muted);transition:transform .15s}
+.toggle[aria-expanded="true"]::after{transform:rotate(180deg)}
 .pairs-h{font-size:.85rem;font-weight:600;margin-bottom:6px}
 .tblwrap{max-height:260px;overflow:auto;border:1px solid var(--rule);border-radius:8px}
 #ptab{border-collapse:collapse;width:100%;font-size:.82rem}
@@ -85,8 +85,6 @@ footer p{margin:.3em 0}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 
-</head>
-<body>
 <main>
   <header>
     <div class="kicker">MthStat 215 · Lesson 20</div>
@@ -112,7 +110,7 @@ footer p{margin:.3em 0}
         <li>No values are added or removed, so the <i>y</i>-values keep the same mean and spread. Only <b>which <i>x</i> each <i>y</i> is paired with</b> changes.</li>
         <li>Because the pairing is random, any link between <i>x</i> and <i>y</i> is broken. A shuffled data set shows what the data could look like if β = 0.</li>
       </ul>
-      <p class="explain-note">Watch the plot: each point keeps its left–right position (its <i>x</i>) and slides up or down to its new <i>y</i>. The table below shows who got which <i>y</i>-value.</p>
+      <p class="explain-note">Watch the plot: each point keeps its left–right position (its <i>x</i>) and slides up or down to its new <i>y</i>. Tap <b>Show who got which <i>y</i>-value</b> below the buttons to see the new pairings.</p>
     </div>
     <p class="ctx" id="shufNote">Original data. The line is the least-squares line from the class notes.</p>
     <svg id="sc" viewBox="0 0 360 250" role="img" aria-label="Scatter plot of the data with fitted line"></svg>
@@ -127,7 +125,8 @@ footer p{margin:.3em 0}
       <button id="orig">Show original data</button>
       <button id="reset">Clear all shuffles</button>
     </div>
-    <div class="pairs">
+    <button class="toggle" id="pairsBtn" aria-expanded="false" aria-controls="pairs"><span>Show who got which <i>y</i>-value</span></button>
+    <div class="pairs" id="pairs" hidden>
       <div class="pairs-h" id="pairsH">Who got which <i>y</i>-value</div>
       <div class="tblwrap"><table id="ptab"></table></div>
     </div>
@@ -324,10 +323,12 @@ function load(k){
 for(const k in DATA){const o=document.createElement("option");o.value=k;o.textContent=DATA[k].name;$("ds").appendChild(o)}
 $("ds").addEventListener("change",e=>load(e.target.value));
 $("b1").onclick=one;$("b10").onclick=()=>many(10);$("b100").onclick=()=>many(100);$("b1000").onclick=()=>many(1000);
+$("pairsBtn").onclick=()=>{const open=$("pairs").hidden;$("pairs").hidden=!open;$("pairsBtn").setAttribute("aria-expanded",open);
+  $("pairsBtn").innerHTML="<span>"+(open?"Hide":"Show")+" who got which <i>y</i>-value</span>";try{localStorage.setItem("pairsOpen",open?"1":"0")}catch(e){}};
+try{if(localStorage.getItem("pairsOpen")==="1")$("pairsBtn").click()}catch(e){}
 $("orig").onclick=original;$("reset").onclick=()=>{slopes=[];lastSlope=null;original();render()};
 $("dBoth").onclick=()=>setDir("both");$("dUp").onclick=()=>setDir("up");$("dDn").onclick=()=>setDir("down");
 load("fatal");
 </script>
 
-</body>
-</html>
+</body></html>
