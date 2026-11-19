@@ -52,6 +52,7 @@ p { margin: 0; max-width: 68ch; }
 .claim .fact span, .claim details.setup summary, .claim label.field { color: var(--band-muted); }
 .claim .fact b { color: var(--accent); }
 .claim button { color: var(--band-ink); border-color: var(--band-ink); }
+.ph { display: inline-block; position: relative; line-height: 1; text-transform: none; } .ph::before { content: "^"; position: absolute; left: 0; right: 0; text-align: center; top: 0.02em; font-size: 0.8em; line-height: 1; font-weight: inherit; }
 .eyebrow { font-family: var(--display); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-size: 0.95rem; }
 .facts { display: flex; flex-wrap: wrap; gap: 10px; }
 .fact { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; display: grid; }
@@ -121,14 +122,14 @@ footer { font-size: 0.82rem; color: var(--muted); }
 
 <div class="wrap">
   <header class="claim">
-    <div class="eyebrow">MthStat 215 · Lesson 10 · Hypothesis tests</div>
+    <div class="eyebrow">Math 2050 · Day 26 · Hypothesis tests</div>
     <h1 id="title">Is Dr. Murphy really an 80% free throw shooter?</h1>
     <p id="story">Dr. Murphy claims to be an 80% free throw shooter. To prove it, she shoots 100 free throws and makes 70 of them. Is she exaggerating, or could an 80% shooter have a day like this just by chance? Assume the claim is true, simulate an 80% shooter, and see how often a result this low happens.</p>
     <div class="facts">
       <div class="fact"><b class="num" id="fClaim">0.80</b><span>Claimed p</span></div>
       <div class="fact"><b class="num" id="fN">100</b><span>Shots per set (n)</span></div>
       <div class="fact"><b class="num" id="fObs">70 / 100</b><span>Dr. Murphy made</span></div>
-      <div class="fact"><b class="num" id="fPhat">0.70</b><span>Her p̂</span></div>
+      <div class="fact"><b class="num" id="fPhat">0.70</b><span>Her <span class="ph">p</span></span></div>
     </div>
     <details class="setup">
       <summary>Change the setup</summary>
@@ -171,7 +172,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
         <div class="score">
           <div><b id="sShots">0</b><span>Shots</span></div>
           <div><b id="sMade">0</b><span>Made</span></div>
-          <div><b id="sPhat">—</b><span>p̂ so far</span></div>
+          <div><b id="sPhat">—</b><span><span class="ph">p</span> so far</span></div>
         </div>
         <div class="shotgrid" id="shotgrid" aria-label="Shot chart"></div>
         <div class="btns">
@@ -187,7 +188,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
 
   <section class="block" aria-labelledby="h-many">
     <h2 id="h-many"><span class="q">Step 2</span> Repeat the set many times</h2>
-    <p class="muted" id="manyIntro">Each dot is one simulated set of 100 free throws by an 80% shooter, placed at that set's proportion made, p̂. The dashed line marks Dr. Murphy's p̂ = 0.70.</p>
+    <p class="muted" id="manyIntro">Each dot is one simulated set of 100 free throws by an 80% shooter, placed at that set's proportion made, <span class="ph">p</span>. The dashed line marks Dr. Murphy's <span class="ph">p</span> = 0.70.</p>
     <div class="btns">
       <span class="muted" style="align-self:center">Simulate</span>
       <button class="primary" data-sets="1" type="button">1 set</button>
@@ -199,12 +200,12 @@ footer { font-size: 0.82rem; color: var(--muted); }
     <div class="plotwrap"><canvas id="plot" aria-label="Dot plot of simulated sample proportions"></canvas></div>
     <div class="stats">
       <span>Sets simulated: <b id="tN">0</b></span>
-      <span>Mean of p̂: <b id="tMean">—</b></span>
-      <span>SD of p̂: <b id="tSD">—</b></span>
+      <span>Mean of <span class="ph">p</span>: <b id="tMean">—</b></span>
+      <span>SD of <span class="ph">p</span>: <b id="tSD">—</b></span>
       <label class="check" for="showNormal"><input type="checkbox" id="showNormal"> Show Normal model N(<span id="nmLabel">0.80, 0.040</span>)</label>
     </div>
     <div class="countbar">
-      <label class="field" for="cmp">Count sets with p̂
+      <label class="field" for="cmp">Count sets with <span class="ph">p</span>
         <select id="cmp">
           <option value="le">≤ (at or below)</option>
           <option value="ge">≥ (at or above)</option>
@@ -218,12 +219,12 @@ footer { font-size: 0.82rem; color: var(--muted); }
 
   <section class="block" aria-labelledby="h-normal">
     <h2 id="h-normal"><span class="q">Step 3</span> The one-proportion z-test</h2>
-    <p class="muted" id="normIntro">We don't need thousands of simulated sets to determine if this result is unusual enough to cast doubt on the claim. If the claim is true and the assumptions are met, the sampling distribution of p̂ is approximately Normal, with a mean and standard deviation determined by the claim (p) and the sample size (n). So, we can use the model to find the test statistic (a z-score) for our observed proportion and use the Normal model to find the P-value: the probability of a result like this one or more extreme. This is called a <strong>hypothesis test</strong>.</p>
+    <p class="muted" id="normIntro">We don't need thousands of simulated sets to determine if this result is unusual enough to cast doubt on the claim. If the claim is true and the assumptions are met, the sampling distribution of <span class="ph">p</span> is approximately Normal, with a mean and standard deviation determined by the claim (p) and the sample size (n). So, we can use the model to find the test statistic (a z-score) for our observed proportion and use the Normal model to find the P-value: the probability of a result like this one or more extreme. This is called a <strong>hypothesis test</strong>.</p>
     <div class="calc">
       <div class="calc-row"><h3>1 · Set up</h3><div class="math" id="cModel"></div></div>
       <div class="calc-row"><h3>2 · Hypotheses</h3><div class="math" id="cHyp"></div></div>
       <div class="calc-row"><h3>3 · Assumptions</h3><div class="math" id="cCond"></div></div>
-      <div class="calc-row"><h3>4 · Standard deviation of p̂</h3><div class="math" id="cSE"></div></div>
+      <div class="calc-row"><h3>4 · Standard deviation of <span class="ph">p</span></h3><div class="math" id="cSE"></div></div>
       <div class="calc-row"><h3>4 · Test statistic</h3><div class="math" id="cZ"></div></div>
       <div class="calc-row"><h3>4 · P-value</h3><div class="math" id="cP"></div></div>
     </div>
@@ -241,7 +242,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let P = 0.80, N = 100, X = 70;
   let set = [];          // current set: array of booleans
-  let sims = [];         // completed p̂ values
+  let sims = [];         // completed <span class="ph">p</span> values
   let animating = false;
 
   const fmt = (v, d = 2) => Number.isFinite(v) ? v.toFixed(d) : "—";
@@ -257,7 +258,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     $("fObs").textContent = `${X} / ${N}`;
     $("fPhat").textContent = fmt(obs(), 3).replace(/0$/, "");
     $("oneIntro").textContent = `Each shot goes in with probability ${P.toFixed(2)}. Shoot a full set of ${N} and record how many went in.`;
-    $("manyIntro").textContent = `Each dot is one simulated set of ${N} free throws by an ${pct}% shooter, placed at that set's proportion made, p̂. The dashed line marks Dr. Murphy's p̂ = ${fmt(obs(), 3).replace(/0$/, "")}.`;
+    $("manyIntro").innerHTML = `Each dot is one simulated set of ${N} free throws by an ${pct}% shooter, placed at that set's proportion made, <span class="ph">p</span>. The dashed line marks Dr. Murphy's <span class="ph">p</span> = ${fmt(obs(), 3).replace(/0$/, "")}.`;
     $("nmLabel").textContent = `${P.toFixed(2)}, ${sd0().toFixed(3)}`;
     $("h-one").lastChild.textContent = ` Shoot one set as an ${pct}% shooter`;
   }
@@ -277,7 +278,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     $("sPhat").textContent = set.length ? (made / set.length).toFixed(2) : "—";
     const done = set.length >= N;
     ["shoot1", "shoot10", "finish"].forEach((id) => $(id).disabled = done || animating);
-    if (done) $("setMsg").innerHTML = `Set complete: <strong>${made} of ${N}</strong> made, so p̂ = <strong>${(made / N).toFixed(2)}</strong>. This set was added as one dot below. Click <em>New set</em> to shoot again.`;
+    if (done) $("setMsg").innerHTML = `Set complete: <strong>${made} of ${N}</strong> made, so <span class="ph">p</span> = <strong>${(made / N).toFixed(2)}</strong>. This set was added as one dot below. Click <em>New set</em> to shoot again.`;
     else $("setMsg").textContent = "A finished set is added as one dot on the plot below.";
   }
   function completeIfDone() {
@@ -378,7 +379,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       ctx.fillText(t.toFixed(2), x, base + 18);
     }
     ctx.fillStyle = ink;
-    const lab1 = `p̂ = proportion of free throws made in ${N} shots`, lab2 = `by an ${Math.round(P * 100)}% free throw shooter`;
+    const lab1 = `Proportion of free throws made in ${N} shots`, lab2 = `by an ${Math.round(P * 100)}% free throw shooter`;
     if (ctx.measureText(lab1 + " " + lab2).width <= pw) ctx.fillText(lab1 + " " + lab2, padL + pw / 2, base + 36);
     else { ctx.fillText(lab1, padL + pw / 2, base + 34); ctx.fillText(lab2, padL + pw / 2, base + 49); }
 
@@ -432,7 +433,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       $("tMean").textContent = m.toFixed(3); $("tSD").textContent = Number.isFinite(sd) ? sd.toFixed(3) : "—";
       const k = sims.filter(counted).length;
       const mode = $("cmp").value, c = parseFloat($("cut").value);
-      const desc = mode === "le" ? `p̂ ≤ ${fmt(c)}` : mode === "ge" ? `p̂ ≥ ${fmt(c)}` : `p̂ at least ${fmt(Math.abs(c - P), 2)} away from ${P.toFixed(2)}`;
+      const desc = mode === "le" ? `<span class="ph">p</span> ≤ ${fmt(c)}` : mode === "ge" ? `<span class="ph">p</span> ≥ ${fmt(c)}` : `<span class="ph">p</span> at least ${fmt(Math.abs(c - P), 2)} away from ${P.toFixed(2)}`;
       $("result").innerHTML = `<strong>${k}</strong> of ${n} simulated sets had ${desc}: a proportion of <strong>${(k / n).toFixed(3)}</strong>.`;
     } else {
       $("tMean").textContent = "—"; $("tSD").textContent = "—";
@@ -455,11 +456,11 @@ footer { font-size: 0.82rem; color: var(--muted); }
     const area = lower ? Phi(z) : 1 - Phi(z);
     const ok1 = N * P >= 5, ok2 = N * (1 - P) >= 5;
     const pct = Math.round(P * 100), dir = lower ? "<" : ">", word = lower ? "less" : "more";
-    $("cModel").innerHTML = `p = the true proportion of free throws Dr. Murphy makes. &nbsp;Sample: n = ${N}, x = ${X}, so p̂ = ${f(ph, 2)}. &nbsp;Significance level α = 0.05.`;
+    $("cModel").innerHTML = `p = the true proportion of free throws Dr. Murphy makes. &nbsp;Sample: n = ${N}, x = ${X}, so <span class="ph">p</span> = ${f(ph, 2)}. &nbsp;Significance level α = 0.05.`;
     $("cCond").innerHTML = `• The shots are independent trials, so we treat them like a simple random sample.<br>• np<sub>0</sub> = ${N}(${f(P,2)}) = ${trim(N * P)} ${ok1 ? "≥" : "<"} 5 &nbsp;and&nbsp; n(1 − p<sub>0</sub>) = ${N}(${f(1 - P,2)}) = ${trim(N * (1 - P))} ${ok2 ? "≥" : "<"} 5${ok1 && ok2 ? ", so the z-test is appropriate." : ". The z-test is not appropriate here; trust the simulation."}`;
-    $("cSE").innerHTML = `If H<sub>0</sub> is true, p̂ is approximately normal with mean p<sub>0</sub> = ${f(P,2)} and standard deviation<br>σ<sub>p̂</sub> = <span class="sqrt"><span><span class="frac"><span>p<sub>0</sub>(1 − p<sub>0</sub>)</span><span>n</span></span></span></span> = <span class="sqrt"><span><span class="frac"><span>(${f(P,2)})(${f(1 - P,2)})</span><span>${N}</span></span></span></span> = <span class="ans">${trim(se.toFixed(4))}</span>`;
-    $("cZ").innerHTML = `z = <span class="frac"><span>p̂ − p<sub>0</sub></span><span>σ<sub>p̂</sub></span></span> = <span class="frac"><span>${f(ph, 2)} − ${f(P,2)}</span><span>${trim(se.toFixed(4))}</span></span> = <span class="ans">${z.toFixed(2)}</span>` +
-      `<div style="line-height:1.5;margin-top:6px">Dr. Murphy's p̂ = ${f(ph, 2)} is <strong>${Math.abs(z).toFixed(2)}</strong> standard deviations ${z < 0 ? "below" : "above"} the value claimed in H<sub>0</sub>.</div>`;
+    $("cSE").innerHTML = `If H<sub>0</sub> is true, <span class="ph">p</span> is approximately normal with mean p<sub>0</sub> = ${f(P,2)} and standard deviation<br>σ<sub><span class="ph">p</span></sub> = <span class="sqrt"><span><span class="frac"><span>p<sub>0</sub>(1 − p<sub>0</sub>)</span><span>n</span></span></span></span> = <span class="sqrt"><span><span class="frac"><span>(${f(P,2)})(${f(1 - P,2)})</span><span>${N}</span></span></span></span> = <span class="ans">${trim(se.toFixed(4))}</span>`;
+    $("cZ").innerHTML = `z = <span class="frac"><span><span class="ph">p</span> − p<sub>0</sub></span><span>σ<sub><span class="ph">p</span></sub></span></span> = <span class="frac"><span>${f(ph, 2)} − ${f(P,2)}</span><span>${trim(se.toFixed(4))}</span></span> = <span class="ans">${z.toFixed(2)}</span>` +
+      `<div style="line-height:1.5;margin-top:6px">Dr. Murphy's <span class="ph">p</span> = ${f(ph, 2)} is <strong>${Math.abs(z).toFixed(2)}</strong> standard deviations ${z < 0 ? "below" : "above"} the value claimed in H<sub>0</sub>.</div>`;
     $("cP").innerHTML = lower
       ? `P-value = P(Z ≤ ${z.toFixed(2)}) = <span class="ans">${area.toFixed(4)}</span> &nbsp;<span class="muted">(Table II: area to the left of ${z.toFixed(2)})</span>`
       : `P-value = P(Z ≥ ${z.toFixed(2)}) = 1 − ${Phi(z).toFixed(4)} = <span class="ans">${area.toFixed(4)}</span> &nbsp;<span class="muted">(1 − Table II entry)</span>`;
@@ -470,8 +471,8 @@ footer { font-size: 0.82rem; color: var(--muted); }
         ? `<p><b class="lbl">Decision</b>P = ${area.toFixed(4)} ≤ α = 0.05, so we <strong>reject H<sub>0</sub></strong>.</p><p><b class="lbl">Interpretation</b>At the 5% significance level, the data provide sufficient evidence to conclude that Dr. Murphy makes ${word} than ${pct}% of her free throws.</p>`
         : `<p><b class="lbl">Decision</b>P = ${area.toFixed(4)} > α = 0.05, so we <strong>do not reject H<sub>0</sub></strong>.</p><p><b class="lbl">Interpretation</b>At the 5% significance level, the data do not provide sufficient evidence to conclude that Dr. Murphy makes ${word} than ${pct}% of her free throws.</p>`);
     const sim = sims.length ? sims.filter((v) => lower ? v <= ph + 1e-9 : v >= ph - 1e-9).length / sims.length : NaN;
-    $("cCompare").innerHTML = `If Dr. Murphy really is an ${Math.round(P * 100)}% shooter, the Normal model says a set of ${N} with p̂ ${lower ? "≤" : "≥"} ${f(ph, 2)} happens only about <strong>${(area * 100).toFixed(2)}%</strong> of the time.` +
-      (sims.length ? ` Your simulation: <strong>${f(sim, 3)}</strong> of ${sims.length} sets. With p̂ taking only whole-shot values, the simulated proportion usually runs a little higher than the Normal area.` : ` Run some sets in Step 2 to compare with your simulation.`);
+    $("cCompare").innerHTML = `If Dr. Murphy really is an ${Math.round(P * 100)}% shooter, the Normal model says a set of ${N} with <span class="ph">p</span> ${lower ? "≤" : "≥"} ${f(ph, 2)} happens only about <strong>${(area * 100).toFixed(2)}%</strong> of the time.` +
+      (sims.length ? ` Your simulation: <strong>${f(sim, 3)}</strong> of ${sims.length} sets. With <span class="ph">p</span> taking only whole-shot values, the simulated proportion usually runs a little higher than the Normal area.` : ` Run some sets in Step 2 to compare with your simulation.`);
     drawZ(z, lower, se);
   }
   function drawZ(z, lower, se) {
@@ -494,7 +495,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       ctx.fillStyle = muted; ctx.fillText(String(k), xs(k), base + 16);
       ctx.fillText((P + k * se).toFixed(se < 0.05 ? 2 : 3), xs(k), base + 30);
     }
-    ctx.textAlign = "left"; ctx.fillText("z", 2, base + 16); ctx.fillText("p̂", 2, base + 30);
+    ctx.textAlign = "left"; ctx.fillText("z", 2, base + 16); ctx.fillText("p", 2, base + 30); { const pw2 = ctx.measureText("p").width, sv = ctx.font; ctx.font = sv.replace(/\d+px/, m => Math.round(parseInt(m) * 0.8) + "px"); ctx.textAlign = "center"; ctx.fillText("^", 2 + pw2 / 2, base + 23); ctx.font = sv; ctx.textAlign = "left"; }
     ctx.strokeStyle = accText; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(xs(zc), top); ctx.lineTo(xs(zc), base); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = accText; ctx.font = "600 12px Public Sans, system-ui, sans-serif"; ctx.textAlign = zc < 0 ? "right" : "left";
     ctx.fillText(`z = ${z.toFixed(2)}`, xs(zc) + (zc < 0 ? -6 : 6), top + 14);
