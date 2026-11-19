@@ -8,15 +8,15 @@
 :root {
   --bg: #F4F4F2;          /* chalk */
   --panel: #FFFFFF;
-  --ink: #111111;         /* UWM black */
+  --ink: #111111;
   --muted: #5E5E5E;
   --line: #D3D3D3;
-  --accent: #FFBD00;      /* UWM gold (PMS 116) */
-  --accent-text: #7A5A00; /* gold dark enough to read on white */
-  --accent-edge: #B38600;
-  --accent-soft: #FFF2CC;
+  --accent: #00539B;      /* Duke blue */
+  --accent-text: #00539B;
+  --accent-edge: #003A70;
+  --accent-soft: #E3EDF7;
   --miss: #9A9A9A;
-  --band: #000000; --band-ink: #FFFFFF; --band-tile: #1C1C1C; --band-line: #3A3A3A; --band-muted: #BDBDBD;
+  --band: #012169; --band-ink: #FFFFFF; --band-tile: #0C2D7A; --band-line: #2B4A93; --band-muted: #BFCBE6; --band-accent: #8DBDE8; --on-accent: #FFFFFF;
   --court: #E8D9BE;       /* maple, only in the gym strip */
   --court-line: #B98E58;
   --focus: #2F6FD6;
@@ -26,13 +26,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0E0E0E; --panel: #191919; --ink: #F2F2F2; --muted: #ABABAB; --line: #343434;
-    --accent: #FFBD00; --accent-text: #FFC933; --accent-edge: #FFBD00; --accent-soft: #3A2D05; --miss: #6F6F6F; --court: #2A2219; --court-line: #7A5C38; --focus: #7FA8F0;
+    --accent: #6FA8DC; --accent-text: #8DBDE8; --accent-edge: #6FA8DC; --accent-soft: #0E2A47; --on-accent: #0B1A2E; --band: #0A1A3F; --band-accent: #8DBDE8; --miss: #6F6F6F; --court: #2A2219; --court-line: #7A5C38; --focus: #7FA8F0;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0E0E0E; --panel: #191919; --ink: #F2F2F2; --muted: #ABABAB; --line: #343434;
-  --accent: #FFBD00; --accent-text: #FFC933; --accent-edge: #FFBD00; --accent-soft: #3A2D05; --miss: #6F6F6F; --court: #2A2219; --court-line: #7A5C38; --focus: #7FA8F0;
+  --accent: #6FA8DC; --accent-text: #8DBDE8; --accent-edge: #6FA8DC; --accent-soft: #0E2A47; --on-accent: #0B1A2E; --band: #0A1A3F; --band-accent: #8DBDE8; --miss: #6F6F6F; --court: #2A2219; --court-line: #7A5C38; --focus: #7FA8F0;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -47,13 +47,14 @@ p { margin: 0; max-width: 68ch; }
 .num { font-variant-numeric: tabular-nums; }
 
 /* claim */
-.claim { display: grid; gap: 14px; background: var(--band); color: var(--band-ink); padding: 22px 20px; border-radius: 8px; border-bottom: 5px solid var(--accent); }
+.claim { display: grid; gap: 14px; background: var(--band); color: var(--band-ink); padding: 22px 20px; border-radius: 8px; border-bottom: 5px solid var(--band-accent); }
 .claim .fact { background: var(--band-tile); border-color: var(--band-line); }
 .claim .fact span, .claim details.setup summary, .claim label.field { color: var(--band-muted); }
-.claim .fact b { color: var(--accent); }
+.claim .fact b { color: var(--band-accent); }
 .claim button { color: var(--band-ink); border-color: var(--band-ink); }
-.ph { display: inline-block; position: relative; line-height: 1; text-transform: none; } .ph::before { content: "^"; position: absolute; left: 0; right: 0; text-align: center; top: 0.02em; font-size: 0.8em; line-height: 1; font-weight: inherit; }
-.eyebrow { font-family: var(--display); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-size: 0.95rem; }
+.ph { text-transform: none; font-size: 1.05em; }
+.ph mi { font-family: inherit; }
+.eyebrow { font-family: var(--display); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--band-accent); font-size: 0.95rem; }
 .facts { display: flex; flex-wrap: wrap; gap: 10px; }
 .fact { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; display: grid; }
 .fact b { font-family: var(--display); font-size: 1.6rem; line-height: 1; font-weight: 800; }
@@ -84,7 +85,7 @@ section.block { background: var(--panel); border: 1px solid var(--line); border-
 
 .btns { display: flex; flex-wrap: wrap; gap: 8px; }
 button { font: inherit; font-weight: 600; font-size: 0.95rem; border-radius: 6px; padding: 10px 16px; min-height: 44px; touch-action: manipulation; cursor: pointer; border: 1px solid var(--ink); background: transparent; color: var(--ink); }
-button.primary { background: var(--accent); border-color: var(--accent-edge); color: #000; }
+button.primary { background: var(--accent); border-color: var(--accent-edge); color: var(--on-accent); }
 button:hover { filter: brightness(1.06); }
 button:disabled { opacity: 0.45; cursor: default; }
 button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
@@ -129,7 +130,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       <div class="fact"><b class="num" id="fClaim">0.80</b><span>Claimed p</span></div>
       <div class="fact"><b class="num" id="fN">100</b><span>Shots per set (n)</span></div>
       <div class="fact"><b class="num" id="fObs">70 / 100</b><span>Dr. Murphy made</span></div>
-      <div class="fact"><b class="num" id="fPhat">0.70</b><span>Her <span class="ph">p</span></span></div>
+      <div class="fact"><b class="num" id="fPhat">0.70</b><span>Her <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math></span></div>
     </div>
     <details class="setup">
       <summary>Change the setup</summary>
@@ -172,7 +173,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
         <div class="score">
           <div><b id="sShots">0</b><span>Shots</span></div>
           <div><b id="sMade">0</b><span>Made</span></div>
-          <div><b id="sPhat">—</b><span><span class="ph">p</span> so far</span></div>
+          <div><b id="sPhat">—</b><span><math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> so far</span></div>
         </div>
         <div class="shotgrid" id="shotgrid" aria-label="Shot chart"></div>
         <div class="btns">
@@ -188,7 +189,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
 
   <section class="block" aria-labelledby="h-many">
     <h2 id="h-many"><span class="q">Step 2</span> Repeat the set many times</h2>
-    <p class="muted" id="manyIntro">Each dot is one simulated set of 100 free throws by an 80% shooter, placed at that set's proportion made, <span class="ph">p</span>. The dashed line marks Dr. Murphy's <span class="ph">p</span> = 0.70.</p>
+    <p class="muted" id="manyIntro">Each dot is one simulated set of 100 free throws by an 80% shooter, placed at that set's proportion made, <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math>. The dashed line marks Dr. Murphy's <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> = 0.70.</p>
     <div class="btns">
       <span class="muted" style="align-self:center">Simulate</span>
       <button class="primary" data-sets="1" type="button">1 set</button>
@@ -200,12 +201,12 @@ footer { font-size: 0.82rem; color: var(--muted); }
     <div class="plotwrap"><canvas id="plot" aria-label="Dot plot of simulated sample proportions"></canvas></div>
     <div class="stats">
       <span>Sets simulated: <b id="tN">0</b></span>
-      <span>Mean of <span class="ph">p</span>: <b id="tMean">—</b></span>
-      <span>SD of <span class="ph">p</span>: <b id="tSD">—</b></span>
+      <span>Mean of <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math>: <b id="tMean">—</b></span>
+      <span>SD of <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math>: <b id="tSD">—</b></span>
       <label class="check" for="showNormal"><input type="checkbox" id="showNormal"> Show Normal model N(<span id="nmLabel">0.80, 0.040</span>)</label>
     </div>
     <div class="countbar">
-      <label class="field" for="cmp">Count sets with <span class="ph">p</span>
+      <label class="field" for="cmp">Count sets with <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math>
         <select id="cmp">
           <option value="le">≤ (at or below)</option>
           <option value="ge">≥ (at or above)</option>
@@ -219,12 +220,13 @@ footer { font-size: 0.82rem; color: var(--muted); }
 
   <section class="block" aria-labelledby="h-normal">
     <h2 id="h-normal"><span class="q">Step 3</span> The one-proportion z-test</h2>
-    <p class="muted" id="normIntro">We don't need thousands of simulated sets to determine if this result is unusual enough to cast doubt on the claim. If the claim is true and the assumptions are met, the sampling distribution of <span class="ph">p</span> is approximately Normal, with a mean and standard deviation determined by the claim (p) and the sample size (n). So, we can use the model to find the test statistic (a z-score) for our observed proportion and use the Normal model to find the P-value: the probability of a result like this one or more extreme. This is called a <strong>hypothesis test</strong>.</p>
+    <p class="muted" id="normIntro">We don't need thousands of simulated sets to determine if this result is unusual enough to cast doubt on the claim. If the claim is true and the assumptions are met, the sampling distribution of <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> is approximately Normal, with a mean and standard deviation determined by the claim (p) and the sample size (n). So, we can use the model to find the test statistic (a z-score) for our observed proportion and use the Normal model to find the P-value: the probability of a result like this one or more extreme. This is called a <strong>hypothesis test</strong>.</p>
     <div class="calc">
       <div class="calc-row"><h3>1 · Set up</h3><div class="math" id="cModel"></div></div>
       <div class="calc-row"><h3>2 · Hypotheses</h3><div class="math" id="cHyp"></div></div>
       <div class="calc-row"><h3>3 · Assumptions</h3><div class="math" id="cCond"></div></div>
-      <div class="calc-row"><h3>4 · Standard deviation of <span class="ph">p</span></h3><div class="math" id="cSE"></div></div>
+      <div class="calc-row"><h3>4 · Standard deviation</h3><div class="math" id="cSE"></div></div>
+      <div class="calc-row"><h3>4 · Sampling distribution model</h3><div class="math" id="cDist"></div></div>
       <div class="calc-row"><h3>4 · Test statistic</h3><div class="math" id="cZ"></div></div>
       <div class="calc-row"><h3>4 · P-value</h3><div class="math" id="cP"></div></div>
     </div>
@@ -242,7 +244,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let P = 0.80, N = 100, X = 70;
   let set = [];          // current set: array of booleans
-  let sims = [];         // completed <span class="ph">p</span> values
+  let sims = [];         // completed p-hat values
   let animating = false;
 
   const fmt = (v, d = 2) => Number.isFinite(v) ? v.toFixed(d) : "—";
@@ -258,7 +260,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     $("fObs").textContent = `${X} / ${N}`;
     $("fPhat").textContent = fmt(obs(), 3).replace(/0$/, "");
     $("oneIntro").textContent = `Each shot goes in with probability ${P.toFixed(2)}. Shoot a full set of ${N} and record how many went in.`;
-    $("manyIntro").innerHTML = `Each dot is one simulated set of ${N} free throws by an ${pct}% shooter, placed at that set's proportion made, <span class="ph">p</span>. The dashed line marks Dr. Murphy's <span class="ph">p</span> = ${fmt(obs(), 3).replace(/0$/, "")}.`;
+    $("manyIntro").innerHTML = `Each dot is one simulated set of ${N} free throws by an ${pct}% shooter, placed at that set's proportion made, <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math>. The dashed line marks Dr. Murphy's <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> = ${fmt(obs(), 3).replace(/0$/, "")}.`;
     $("nmLabel").textContent = `${P.toFixed(2)}, ${sd0().toFixed(3)}`;
     $("h-one").lastChild.textContent = ` Shoot one set as an ${pct}% shooter`;
   }
@@ -278,7 +280,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
     $("sPhat").textContent = set.length ? (made / set.length).toFixed(2) : "—";
     const done = set.length >= N;
     ["shoot1", "shoot10", "finish"].forEach((id) => $(id).disabled = done || animating);
-    if (done) $("setMsg").innerHTML = `Set complete: <strong>${made} of ${N}</strong> made, so <span class="ph">p</span> = <strong>${(made / N).toFixed(2)}</strong>. This set was added as one dot below. Click <em>New set</em> to shoot again.`;
+    if (done) $("setMsg").innerHTML = `Set complete: <strong>${made} of ${N}</strong> made, so <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> = <strong>${(made / N).toFixed(2)}</strong>. This set was added as one dot below. Click <em>New set</em> to shoot again.`;
     else $("setMsg").textContent = "A finished set is added as one dot on the plot below.";
   }
   function completeIfDone() {
@@ -433,7 +435,7 @@ footer { font-size: 0.82rem; color: var(--muted); }
       $("tMean").textContent = m.toFixed(3); $("tSD").textContent = Number.isFinite(sd) ? sd.toFixed(3) : "—";
       const k = sims.filter(counted).length;
       const mode = $("cmp").value, c = parseFloat($("cut").value);
-      const desc = mode === "le" ? `<span class="ph">p</span> ≤ ${fmt(c)}` : mode === "ge" ? `<span class="ph">p</span> ≥ ${fmt(c)}` : `<span class="ph">p</span> at least ${fmt(Math.abs(c - P), 2)} away from ${P.toFixed(2)}`;
+      const desc = mode === "le" ? `<math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> ≤ ${fmt(c)}` : mode === "ge" ? `<math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> ≥ ${fmt(c)}` : `<math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> at least ${fmt(Math.abs(c - P), 2)} away from ${P.toFixed(2)}`;
       $("result").innerHTML = `<strong>${k}</strong> of ${n} simulated sets had ${desc}: a proportion of <strong>${(k / n).toFixed(3)}</strong>.`;
     } else {
       $("tMean").textContent = "—"; $("tSD").textContent = "—";
@@ -456,23 +458,24 @@ footer { font-size: 0.82rem; color: var(--muted); }
     const area = lower ? Phi(z) : 1 - Phi(z);
     const ok1 = N * P >= 5, ok2 = N * (1 - P) >= 5;
     const pct = Math.round(P * 100), dir = lower ? "<" : ">", word = lower ? "less" : "more";
-    $("cModel").innerHTML = `p = the true proportion of free throws Dr. Murphy makes. &nbsp;Sample: n = ${N}, x = ${X}, so <span class="ph">p</span> = ${f(ph, 2)}. &nbsp;Significance level α = 0.05.`;
+    $("cModel").innerHTML = `<b>Parameter:</b> p = the true proportion of free throws Dr. Murphy makes.<br><b>Procedure:</b> one-proportion z-test. &nbsp;<b>Significance level:</b> α = 0.05.<br><b>Observed:</b> n = ${N}, x = ${X}, <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> = ${f(ph, 2)}; claimed value p<sub>0</sub> = ${f(P,2)}.`;
     $("cCond").innerHTML = `• The shots are independent trials, so we treat them like a simple random sample.<br>• np<sub>0</sub> = ${N}(${f(P,2)}) = ${trim(N * P)} ${ok1 ? "≥" : "<"} 5 &nbsp;and&nbsp; n(1 − p<sub>0</sub>) = ${N}(${f(1 - P,2)}) = ${trim(N * (1 - P))} ${ok2 ? "≥" : "<"} 5${ok1 && ok2 ? ", so the z-test is appropriate." : ". The z-test is not appropriate here; trust the simulation."}`;
-    $("cSE").innerHTML = `If H<sub>0</sub> is true, <span class="ph">p</span> is approximately normal with mean p<sub>0</sub> = ${f(P,2)} and standard deviation<br>σ<sub><span class="ph">p</span></sub> = <span class="sqrt"><span><span class="frac"><span>p<sub>0</sub>(1 − p<sub>0</sub>)</span><span>n</span></span></span></span> = <span class="sqrt"><span><span class="frac"><span>(${f(P,2)})(${f(1 - P,2)})</span><span>${N}</span></span></span></span> = <span class="ans">${trim(se.toFixed(4))}</span>`;
-    $("cZ").innerHTML = `z = <span class="frac"><span><span class="ph">p</span> − p<sub>0</sub></span><span>σ<sub><span class="ph">p</span></sub></span></span> = <span class="frac"><span>${f(ph, 2)} − ${f(P,2)}</span><span>${trim(se.toFixed(4))}</span></span> = <span class="ans">${z.toFixed(2)}</span>` +
-      `<div style="line-height:1.5;margin-top:6px">Dr. Murphy's <span class="ph">p</span> = ${f(ph, 2)} is <strong>${Math.abs(z).toFixed(2)}</strong> standard deviations ${z < 0 ? "below" : "above"} the value claimed in H<sub>0</sub>.</div>`;
+    $("cSE").innerHTML = `Standard deviation of <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math>, using p<sub>0</sub> because we assume H<sub>0</sub> is true:<br>σ<sub><math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math></sub> = <span class="sqrt"><span><span class="frac"><span>p<sub>0</sub>(1 − p<sub>0</sub>)</span><span>n</span></span></span></span> = <span class="sqrt"><span><span class="frac"><span>(${f(P,2)})(${f(1 - P,2)})</span><span>${N}</span></span></span></span> = <span class="ans">${trim(se.toFixed(4))}</span>`;
+    $("cDist").innerHTML = `If H<sub>0</sub> is true, <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> is approximately <b>Normal</b> with mean p<sub>0</sub> = ${f(P,2)} and standard deviation σ<sub><math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math></sub> = ${trim(se.toFixed(4))}.<br><span class="muted" style="font-size:0.9rem">The sketch below is centered at p<sub>0</sub> (from H<sub>0</sub>) and shaded in the direction of H<sub>a</sub>.</span>`;
+    $("cZ").innerHTML = `z = <span class="frac"><span><math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> − p<sub>0</sub></span><span>σ<sub><math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math></sub></span></span> = <span class="frac"><span>${f(ph, 2)} − ${f(P,2)}</span><span>${trim(se.toFixed(4))}</span></span> = <span class="ans">${z.toFixed(2)}</span>` +
+      `<div style="line-height:1.5;margin-top:6px">Dr. Murphy's <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> = ${f(ph, 2)} is <strong>${Math.abs(z).toFixed(2)}</strong> standard deviations ${z < 0 ? "below" : "above"} the value claimed in H<sub>0</sub>.</div>`;
     $("cP").innerHTML = lower
       ? `P-value = P(Z ≤ ${z.toFixed(2)}) = <span class="ans">${area.toFixed(4)}</span> &nbsp;<span class="muted">(Table II: area to the left of ${z.toFixed(2)})</span>`
       : `P-value = P(Z ≥ ${z.toFixed(2)}) = 1 − ${Phi(z).toFixed(4)} = <span class="ans">${area.toFixed(4)}</span> &nbsp;<span class="muted">(1 − Table II entry)</span>`;
     $("cHyp").innerHTML = `H<sub>0</sub>: p = ${f(P,2)} &nbsp;(Dr. Murphy is an ${pct}% free throw shooter)<br>H<sub>a</sub>: p ${dir} ${f(P,2)} &nbsp;(Dr. Murphy makes ${word} than ${pct}% of her free throws)<br><span class="muted" style="font-size:0.9rem">${lower ? "Left" : "Right"}-tailed test</span>`;
-    const sig = area <= 0.05;
-    $("cDec").innerHTML = `<p><b class="lbl">What the P-value means</b>If Dr. Murphy really is an ${pct}% free throw shooter, the probability of making ${f(ph, 2)} or ${lower ? "less" : "more"} of ${N} shots is <strong>${area.toFixed(4)}</strong>.</p>` +
+    const sig = area < 0.05;
+    $("cDec").innerHTML = `<p><b class="lbl">What the P-value means</b>If Dr. Murphy really is an ${pct}% free throw shooter, the Normal model says the probability of making ${f(ph, 2)} or ${lower ? "less" : "more"} of ${N} shots is <strong>${area.toFixed(4)}</strong>.</p>` +
       (sig
-        ? `<p><b class="lbl">Decision</b>P = ${area.toFixed(4)} ≤ α = 0.05, so we <strong>reject H<sub>0</sub></strong>.</p><p><b class="lbl">Interpretation</b>At the 5% significance level, the data provide sufficient evidence to conclude that Dr. Murphy makes ${word} than ${pct}% of her free throws.</p>`
-        : `<p><b class="lbl">Decision</b>P = ${area.toFixed(4)} > α = 0.05, so we <strong>do not reject H<sub>0</sub></strong>.</p><p><b class="lbl">Interpretation</b>At the 5% significance level, the data do not provide sufficient evidence to conclude that Dr. Murphy makes ${word} than ${pct}% of her free throws.</p>`);
+        ? `<p><b class="lbl">Decision</b>P-value = ${area.toFixed(4)} < α = 0.05, so we <strong>reject H<sub>0</sub></strong>.</p><p><b class="lbl">Interpretation</b>At the α = 0.05 significance level, these data provide statistically significant evidence to conclude that Dr. Murphy makes ${word} than ${pct}% of her free throws.</p>`
+        : `<p><b class="lbl">Decision</b>P-value = ${area.toFixed(4)} ≥ α = 0.05, so we <strong>fail to reject H<sub>0</sub></strong>.</p><p><b class="lbl">Interpretation</b>At the α = 0.05 significance level, these data do not provide statistically significant evidence that Dr. Murphy makes ${word} than ${pct}% of her free throws.</p>`);
     const sim = sims.length ? sims.filter((v) => lower ? v <= ph + 1e-9 : v >= ph - 1e-9).length / sims.length : NaN;
-    $("cCompare").innerHTML = `If Dr. Murphy really is an ${Math.round(P * 100)}% shooter, the Normal model says a set of ${N} with <span class="ph">p</span> ${lower ? "≤" : "≥"} ${f(ph, 2)} happens only about <strong>${(area * 100).toFixed(2)}%</strong> of the time.` +
-      (sims.length ? ` Your simulation: <strong>${f(sim, 3)}</strong> of ${sims.length} sets. With <span class="ph">p</span> taking only whole-shot values, the simulated proportion usually runs a little higher than the Normal area.` : ` Run some sets in Step 2 to compare with your simulation.`);
+    $("cCompare").innerHTML = `If Dr. Murphy really is an ${Math.round(P * 100)}% shooter, the Normal model says a set of ${N} with <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> ${lower ? "≤" : "≥"} ${f(ph, 2)} happens only about <strong>${(area * 100).toFixed(2)}%</strong> of the time.` +
+      (sims.length ? ` Your simulation: <strong>${f(sim, 3)}</strong> of ${sims.length} sets. With <math class="ph"><mover accent="true"><mi mathvariant="normal">p</mi><mo>^</mo></mover></math> taking only whole-shot values, the simulated proportion usually runs a little higher than the Normal area.` : ` Run some sets in Step 2 to compare with your simulation.`);
     drawZ(z, lower, se);
   }
   function drawZ(z, lower, se) {
